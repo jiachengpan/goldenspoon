@@ -37,14 +37,14 @@ class GenericIndexBase:
 # generic indexer for columns without special metadata
 class GenericNameIndex(GenericIndexBase):
     name = 'generic'
-    key_names = ['证券代码']
+    key_names = ['证券代码', '证券名称']
 
     def run(self, row, col, metadata):
         if pd.isna(row[col]):
             return False
 
         indexed = self.result
-        key = row['证券代码']
+        key = (row['证券代码'], row['证券名称'])
 
         if col in indexed[key] and not np.isclose(indexed[key][col], row[col]):
             print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
@@ -258,15 +258,3 @@ class Database:
                     if indexer.run(row, col, metadata):
                         break
 
-if __name__ == '__main__':
-    database = Database()
-
-    print('## FUND')
-    for k, v in database.fund_stats.items():
-        print('###', k)
-        print(v.columns)
-
-    print('## STOCK')
-    for k, v in database.stock_stats.items():
-        print('###', k)
-        print(v.columns)
