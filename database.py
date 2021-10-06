@@ -1,14 +1,121 @@
 import os
 import re
 import json
+import gdown
 import numpy as np
 import pandas as pd
-import subprocess
-import shlex
 import datetime
 import calendar
+import pprint
 from collections import defaultdict
 import utils
+
+
+class GenericIndexBase:
+    def __init__(self):
+        self.result = defaultdict(dict)
+
+    def get_indexed_data(self):
+        rows = []
+        for k, v in self.result.items():
+            if isinstance(v, dict):
+                for key_name, key_value in zip(self.key_names, k):
+                    v[key_name] = key_value
+                rows.append(v)
+            elif isinstance(v, (tuple, list)):
+                for vv in v:
+                    if not v: continue
+                    for key_name, key_value in zip(self.key_names, k):
+                        vv[key_name] = key_value
+                    rows.append(vv)
+            else:
+                assert 0, 'unsupported type: {}'.format(type(v))
+
+        if not rows:
+            return None
+        return pd.DataFrame(rows)
+
+# generic indexer for columns without special metadata
+class GenericNameIndex(GenericIndexBase):
+    name = 'generic'
+    key_names = ['证券代码']
+
+    def run(self, row, col, metadata):
+        if pd.isna(row[col]):
+            return False
+
+        indexed = self.result
+        key = row['证券代码']
+
+        if col in indexed[key] and not np.isclose(indexed[key][col], row[col]):
+            print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
+                col, key, indexed[key][col], row[col]))
+        indexed[key][col] = row[col]
+        return True
+
+# generic indexer for columns with date
+class GenericDateIndex(GenericIndexBase):
+    name = 'date'
+    key_names = ['证券代码', '日期']
+
+    def run(self, row, col, metadata):
+        if 'date' not in metadata:
+            return False
+        if pd.isna(row[col]):
+            return False
+
+        indexed = self.result
+        key = (row['证券代码'], metadata['date'])
+
+        name = ' '.join(
+            [metadata['name']] +
+            ['[%s]%s' % (k, v) for k, v in metadata.items() if k not in ('name', 'date')])
+
+        if name in indexed[key] and not np.isclose(indexed[key][name], row[col]):
+            print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
+                name , key, indexed[key][name], row[col]))
+        indexed[key][name] = row[col]
+        return True
+
+# indexer for funds topN stock holding stats
+class TopNStockHoldingsIndex(GenericIndexBase):
+    name = 'topn_fund_stock_holding'
+    key_names = ['证券代码', '日期']
+
+    def run(self, row, col, metadata):
+        k_columns = ('重仓股股票市值', '重仓股持仓占流通股比例', '前十大重仓股名称')
+        if metadata['name'] not in k_columns:
+            return False
+
+        assert 'date' in metadata
+
+        indexed = self.result
+        key = (row['证券代码'], metadata['date'])
+        if pd.isna(key[0]):
+            return False
+
+        if key not in indexed:
+            indexed[key] = defaultdict(dict)
+
+        if metadata['name'] == k_columns[-1]:
+            if pd.isna(row[col]):
+                return True
+            stock_names = row[col].split(',')
+            for i, name in enumerate(stock_names):
+                try:
+                    indexed[key][i]['证券名称'] = name
+                except:
+                    assert 0, 'i: {} stock: {} {}'.format(i, name, stock_names)
+        else:
+            topN = metadata['topN']-1
+            assert topN >= 0
+            indexed[key][topN]['indicator'] = metadata['name']
+            indexed[key][topN]['value']     = row[col]
+        return True
+    
+    def get_indexed_data(self):
+        self.result = {k: list(v.values()) for k, v in self.result.items()}
+        return super().get_indexed_data()
 
 class Database:
     k_files = {
@@ -27,146 +134,139 @@ class Database:
         'stocks.quarterly_report':                '1BbJobIn0Ds7K7g2ZEGoPVNMHbeUY0N3Y',
         }
 
+    k_key_columns = (
+        '证券代码',
+        '证券名称',
+        )
+
     def __init__(self):
         self.k_cached = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cached')
 
-    def _download_files(self):
+    @staticmethod
+    def compute_column_metadata(col):
+        re_report_timestamp = re.compile('.报告期.(\d{4})年(.*)')
+        re_trans_timestamp  = re.compile('.*日期..*(\d{4})-(\d{2})-(\d{2})')
+        re_topn_name        = re.compile('.名次.*第(\d+)名')
+        re_meta_name        = re.compile('\[([^]]+)\](\S+)')
+
+        k_report_mapping = {
+                '一季':         (3, 31),
+                '二季/中报':     (6, 30),
+                '三季':         (9, 30),
+                '年报':         (12, 31),
+                }
+
+        tokens   = []
+        metadata = {}
+        for tok in col.split():
+            m = re_report_timestamp.match(tok)
+            if m:
+                year, rpt = m.groups()
+                month, day = k_report_mapping[rpt]
+                assert 'date' not in metadata
+                metadata['date'] = datetime.date(int(year), month, day)
+                continue
+
+            m = re_trans_timestamp.match(tok)
+            if m:
+                assert 'date' not in metadata
+                year, month, day = m.groups()
+                metadata['date'] = datetime.date(int(year), int(month), int(day))
+                continue
+
+            m = re_topn_name.match(tok)
+            if m:
+                topn = int(m.groups()[0])
+                metadata['topN'] = topn
+                continue
+
+            m = re_meta_name.match(tok)
+            if m:
+                key, value = m.groups()
+                metadata[key] = value
+                continue
+
+            tokens.append(tok)
+
+        metadata['name'] = '_'.join(tokens)
+        return metadata
+
+    def download_files(self):
         os.makedirs(self.k_cached, exist_ok=True)
 
         for name, fid in self.k_files.items():
             name += '.xls'
             file_name = os.path.join(self.k_cached, name)
-            if os.path.exists(file_name):
-                continue
-
-            os.system('wget -O {name} https://drive.google.com/u/0/uc?id={fid}&export=download'.format(
-                name = file_name,
-                fid  = fid))
-
-    def _parse_columns(self, df):
-        re_report_timestamp = re.compile('.报告期.(\d{4})年(.*)')
-        re_trans_timestamp  = re.compile('.*日期..*(\d{4})-(\d{2})-(\d{2})')
-        re_topn_name = re.compile('.名次.*第(\d+)名')
-        re_unit_name = re.compile('.单位.')
-
-        k_report_mapping = {
-                '一季':       '0331',
-                '二季/中报':  '0630',
-                '三季':       '0930',
-                '年报':       '1231',
-                }
-
-        result = []
-        for col in df.columns:
-            tokens = []
-            token_data = []
-            for tok in col.split():
-                m = re_report_timestamp.match(tok)
-                if m:
-                    year, rpt = m.groups()
-                    date = k_report_mapping[rpt]
-                    token_data.append(('date', '%s%s' % (year, date)))
-                    continue
-
-                m = re_trans_timestamp.match(tok)
-                if m:
-                    year, month, date = m.groups()
-                    token_data.append(('date', '%s%s%s' % (year, month, date)))
-                    continue
-
-                m = re_topn_name.match(tok)
-                if m:
-                    topn = int(m.groups()[0])
-                    token_data.append(('top', topn))
-                    continue
-
-                m = re_unit_name.match(tok)
-                if m:
-                    continue
-
-                tokens.append(tok)
-
-            new_col = ' '.join(map(str, tokens))
-            if token_data:
-                new_col = (new_col, json.dumps(dict(token_data)))
-            result.append(new_col)
-        return result
+            gdown.cached_download(
+                url  = 'https://drive.google.com/u/0/uc?id={fid}'.format(fid=fid),
+                path = file_name)
 
     def load_files(self):
-        self._download_files()
-
         def load_df():
             all_df = {}
             for name, fid in self.k_files.items():
                 name += '.xls'
                 df = pd.read_excel(os.path.join(self.k_cached, name))
-                df.columns = self._parse_columns(df)
-
+                df = df.replace('——', np.nan)
+                df.columns = [' '.join(col.split()) for col in df.columns]
                 all_df[name] = df
             return all_df
 
+        self.download_files()
         self.df = utils.pickle_cache(os.path.join(self.k_cached, 'all_data.pkl'), load_df)
 
     def index_data(self):
-        utils.pickle_cache(os.path.join(self.k_cached, 'funds_stats.pkl'), lambda :
-                self.index_data_by_column_date([df for name, df in self.df.items()
-                                                if name.startswith('funds')]))
+        self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'), lambda :
+                self.index_by_column_metadata([df for name, df in self.df.items() if name.startswith('funds')]))
+        self.stock_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_stock_stats.pkl'), lambda :
+                self.index_by_column_metadata([df for name, df in self.df.items() if name.startswith('stocks')]))
 
-        return
-        col2sub = defaultdict(list)
-        for name, df in self.df.items():
-            for col in df.columns:
-                if isinstance(col, (tuple, list)):
-                    colname = col[0]
-                    coltail = col[1:]
-                else:
-                    colname = col
-                    coltail = None
+    def index_by_column_metadata(self, dfs):
+        indexers = [
+            TopNStockHoldingsIndex(),
+            GenericDateIndex(),
+            GenericNameIndex(),
+        ]
 
-
-        import pprint
-        pprint.pprint(col2sub)
-
-    def index_data_by_column_date(self, dfs):
-        result = defaultdict(dict)
         for df in dfs:
-            indexed_columns = []
-
-            for col in df.columns:
-                if not isinstance(col, (tuple, list)):
-                    continue
-                colname, colmeta = col
-                colmeta = json.loads(colmeta)
-
-                if 'date' not in colmeta:
-                    continue
-
-                date = datetime.datetime.strptime(colmeta['date'], '%Y%m%d')
-                new_day = calendar.monthrange(date.year, date.month)[1]
-                colmeta['date'] = datetime.date(date.year, date.month, new_day)
-
-                indexed_columns.append((col, colname, colmeta))
-
-            for index, row in df.iterrows():
-                for col, colname, colmeta in indexed_columns:
-                    date = colmeta['date']
-                    suffix = '_'.join('%s%s' % (k, v) for k, v in colmeta.items() if k != 'date')
-                    if suffix:
-                        colname += '_' + suffix
-
-                    key = (row['证券代码'], date)
-                    result[key][colname] = row[col]
-
-        rows = []
-        for k, v in result.items():
-            v['证券代码'], v['date'] = k
-            rows.append(v)
-
-        result = pd.DataFrame(rows)
+            self.index_by_column_metadata_impl(indexers, df)
+        
+        result = {}
+        for indexer in indexers:
+            data = indexer.get_indexed_data()
+            if data is None:
+                continue
+            result[indexer.name] = data
+        
         return result
+
+    def index_by_column_metadata_impl(self, indexers, df):
+        columns_metadata = {}
+        for col in df.columns:
+            if col in self.k_key_columns:
+                continue
+            columns_metadata[col] = self.compute_column_metadata(col)
+
+        for _, row in df.iterrows():
+            if any(pd.isna(row[col]) for col in self.k_key_columns):
+                continue
+
+            for col, metadata in columns_metadata.items():
+                for indexer in indexers:
+                    if indexer.run(row, col, metadata):
+                        break
 
 if __name__ == '__main__':
     database = Database()
     database.load_files()
     database.index_data()
 
+    print('## FUND')
+    for k, v in database.fund_stats.items():
+        print('###', k)
+        print(v.columns)
+
+    print('## STOCK')
+    for k, v in database.stock_stats.items():
+        print('###', k)
+        print(v.columns)
