@@ -8,8 +8,7 @@ import datetime
 import calendar
 import pprint
 from collections import defaultdict
-import utils
-
+from . import utils
 
 class GenericIndexBase:
     def __init__(self):
@@ -112,7 +111,7 @@ class TopNStockHoldingsIndex(GenericIndexBase):
             indexed[key][topN]['indicator'] = metadata['name']
             indexed[key][topN]['value']     = row[col]
         return True
-    
+
     def get_indexed_data(self):
         self.result = {k: list(v.values()) for k, v in self.result.items()}
         return super().get_indexed_data()
@@ -140,7 +139,10 @@ class Database:
         )
 
     def __init__(self):
-        self.k_cached = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cached')
+        self.k_cached = os.path.join(os.getcwd(), 'cached')
+
+        self.load_files()
+        self.index_data()
 
     @staticmethod
     def compute_column_metadata(col):
@@ -230,14 +232,14 @@ class Database:
 
         for df in dfs:
             self.index_by_column_metadata_impl(indexers, df)
-        
+
         result = {}
         for indexer in indexers:
             data = indexer.get_indexed_data()
             if data is None:
                 continue
             result[indexer.name] = data
-        
+
         return result
 
     def index_by_column_metadata_impl(self, indexers, df):
@@ -258,8 +260,6 @@ class Database:
 
 if __name__ == '__main__':
     database = Database()
-    database.load_files()
-    database.index_data()
 
     print('## FUND')
     for k, v in database.fund_stats.items():
