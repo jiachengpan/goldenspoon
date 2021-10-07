@@ -1,120 +1,12 @@
 import os
 import re
-import json
 import glob
 import numpy as np
 import pandas as pd
 import datetime
-import calendar
-import pprint
-from collections import defaultdict
 from . import utils
+from .index import GenericDateIndex, GenericNameIndex, TopNStocksIndex
 
-class GenericIndexBase:
-    def __init__(self):
-        self.result = defaultdict(dict)
-
-    def get_indexed_data(self):
-        rows = []
-        for k, v in self.result.items():
-            if isinstance(v, dict):
-                for key_name, key_value in zip(self.key_names, k):
-                    v[key_name] = key_value
-                rows.append(v)
-            elif isinstance(v, (tuple, list)):
-                for vv in v:
-                    if not v: continue
-                    for key_name, key_value in zip(self.key_names, k):
-                        vv[key_name] = key_value
-                    rows.append(vv)
-            else:
-                assert 0, 'unsupported type: {}'.format(type(v))
-
-        if not rows:
-            return None
-        return pd.DataFrame(rows)
-
-# generic indexer for columns without special metadata
-class GenericNameIndex(GenericIndexBase):
-    name = 'generic'
-    key_names = ['证券代码', '证券名称']
-
-    def run(self, row, col, metadata):
-        if pd.isna(row[col]):
-            return False
-
-        indexed = self.result
-        key = (row['证券代码'], row['证券名称'])
-
-        if col in indexed[key] and not np.isclose(indexed[key][col], row[col]):
-            print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
-                col, key, indexed[key][col], row[col]))
-        indexed[key][col] = row[col]
-        return True
-
-# generic indexer for columns with date
-class GenericDateIndex(GenericIndexBase):
-    name = 'date'
-    key_names = ['证券代码', '日期']
-
-    def run(self, row, col, metadata):
-        if 'date' not in metadata:
-            return False
-        if pd.isna(row[col]):
-            return False
-
-        indexed = self.result
-        key = (row['证券代码'], metadata['date'])
-
-        name = ' '.join(
-            [metadata['name']] +
-            ['[%s]%s' % (k, v) for k, v in metadata.items() if k not in ('name', 'date')])
-
-        if name in indexed[key] and not np.isclose(indexed[key][name], row[col]):
-            print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
-                name , key, indexed[key][name], row[col]))
-        indexed[key][name] = row[col]
-        return True
-
-# indexer for funds topN stock holding stats
-class TopNStockHoldingsIndex(GenericIndexBase):
-    name = 'topn_fund_stock_holding'
-    key_names = ['证券代码', '日期']
-
-    def run(self, row, col, metadata):
-        k_columns = ('重仓股股票市值', '重仓股持仓占流通股比例', '前十大重仓股名称')
-        if metadata['name'] not in k_columns:
-            return False
-
-        assert 'date' in metadata
-
-        indexed = self.result
-        key = (row['证券代码'], metadata['date'])
-        if pd.isna(key[0]):
-            return False
-
-        if key not in indexed:
-            indexed[key] = defaultdict(dict)
-
-        if metadata['name'] == k_columns[-1]:
-            if pd.isna(row[col]):
-                return True
-            stock_names = row[col].split(',')
-            for i, name in enumerate(stock_names):
-                try:
-                    indexed[key][i]['证券名称'] = name
-                except:
-                    assert 0, 'i: {} stock: {} {}'.format(i, name, stock_names)
-        else:
-            topN = metadata['topN']-1
-            assert topN >= 0
-            indexed[key][topN]['indicator'] = metadata['name']
-            indexed[key][topN]['value']     = row[col]
-        return True
-
-    def get_indexed_data(self):
-        self.result = {k: list(v.values()) for k, v in self.result.items()}
-        return super().get_indexed_data()
 
 class Database:
     k_key_columns = (
@@ -124,9 +16,10 @@ class Database:
 
     def __init__(self, path):
         self.k_cached = os.path.join(os.getcwd(), 'cached')
+        self.k_path   = path
+        self.raw_data = {}
         os.makedirs(self.k_cached, exist_ok=True)
 
-        self.load_files(path)
         self.index_data()
 
     def get_funds(self):
@@ -140,6 +33,18 @@ class Database:
 
     def get_stock_stats(self, name):
         return self.stock_stats[name]
+
+    def get_fund_by_name(self, name):
+        return self.fund_map_reverse[name]
+
+    def get_fund_by_code(self, code):
+        return self.fund_map[code]
+
+    def get_stock_by_name(self, name):
+        return self.stock_map_reverse[name]
+
+    def get_stock_by_code(self, code):
+        return self.stock_map[code]
 
     @staticmethod
     def compute_column_metadata(col):
@@ -190,24 +95,32 @@ class Database:
         metadata['name'] = '_'.join(tokens)
         return metadata
 
-    def load_files(self, path):
-        self.df = {}
-        for filename in glob.glob(os.path.join(path, '*.xls*'), recursive=True):
+    def load_files(self):
+        if self.raw_data:
+            return
+
+        self.raw_data = {}
+        for filename in glob.glob(os.path.join(self.k_path, '*.xls*'), recursive=True):
             print('loading {}'.format(filename))
             df = pd.read_excel(filename)
             df = df.replace('——', np.nan)
             df.columns = [' '.join(col.split()) for col in df.columns]
-            self.df[os.path.basename(filename)] = df
+            self.raw_data[os.path.basename(filename)] = df
 
     def index_data(self):
-        self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'), lambda :
-                self.index_by_column_metadata([df for name, df in self.df.items() if name.startswith('funds')]))
-        self.stock_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_stock_stats.pkl'), lambda :
-                self.index_by_column_metadata([df for name, df in self.df.items() if name.startswith('stocks')]))
+        self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'), 
+                lambda : self.index_by_column_metadata('funds'))
+        self.stock_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_stock_stats.pkl'),
+                lambda : self.index_by_column_metadata('stocks'))
 
-    def index_by_column_metadata(self, dfs):
+        self.index_basic_info()
+
+    def index_by_column_metadata(self, prefix):
+        self.load_files()
+        dfs = [df for name, df in self.raw_data.items() if name.startswith(prefix)]
+
         indexers = [
-            TopNStockHoldingsIndex(),
+            TopNStocksIndex(),
             GenericDateIndex(),
             GenericNameIndex(),
         ]
@@ -245,3 +158,18 @@ class Database:
                     if indexer.run(row, col, metadata):
                         break
 
+    def index_basic_info(self):
+        assert self.fund_stats and self.stock_stats
+
+        # code -> name
+        key_columns = list(self.k_key_columns)
+
+        # for funds, there may be duplicated names mapping to different codes
+        # so fund_map_reverse is shorter than fund_map
+        fund_basics = self.get_funds()[key_columns]
+        self.fund_map = dict(fund_basics.values.tolist())
+        self.fund_map_reverse = {v: k for k, v in self.fund_map.items()}
+
+        stock_basics = self.get_stocks()[key_columns]
+        self.stock_map = dict(stock_basics.values.tolist())
+        self.stock_map_reverse = {v: k for k, v in self.stock_map.items()}
