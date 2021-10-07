@@ -1,7 +1,7 @@
 import os
 import re
 import json
-import gdown
+import glob
 import numpy as np
 import pandas as pd
 import datetime
@@ -117,31 +117,16 @@ class TopNStockHoldingsIndex(GenericIndexBase):
         return super().get_indexed_data()
 
 class Database:
-    k_files = {
-        'funds.basic_info':                       '1d2RkH8CmpoKtCrquAdgxnnRgaUGnDtEw',
-        'funds.topn_stock_mkt_value':             '1eZqXMu1fhUiMoB6Yf9HfrTBdHJAzb7Fr',
-        'funds.topn_stock_name':                  '1AMjUJVwbxvT9fuSgv-t6waSwJ2cT389X',
-        'funds.topn_stock_share_ratio':           '1uhl7SQIw1HPF9Yr6fqTb7hIbz-yytS0t',
-        'funds.total_value_and_stock_investment': '14LuEIdajG2e2M_dykID7roFdi70PijNB',
-        'funds.total_value_incr_ratio':           '17W7yZFuqwK2YmWhSgfibZUtuCpzUrK_s',
-        'stocks.basic_info':                      '1Zn1bgbAStGLny3lMYFd4TvODcHgHr3G8',
-        'stocks.margin_and_short_diff':           '1vdcUFNhRhJRUPFxeG3DDUJYegau8tuaN',
-        'stocks.topn_funds_holding':              '1oL3JFVIlvKaG-7JC3dzUxbogFATpb2IZ',
-        'stocks.monthly_performance_2020':        '12IGV0KDFwzU2SGMRgbo1h-Fs86oFhB0z',
-        'stocks.monthly_performance_2021':        '1in6nK7gNJ7RlKgsw520eTtVKYX21PQ2A',
-        'stocks.general':                         '1YdCp7wKM7Ck1_1ZiWEd3bLvueG74HRBs',
-        'stocks.quarterly_report':                '1BbJobIn0Ds7K7g2ZEGoPVNMHbeUY0N3Y',
-        }
-
     k_key_columns = (
         '证券代码',
         '证券名称',
         )
 
-    def __init__(self):
+    def __init__(self, path):
         self.k_cached = os.path.join(os.getcwd(), 'cached')
+        os.makedirs(self.k_cached, exist_ok=True)
 
-        self.load_files()
+        self.load_files(path)
         self.index_data()
 
     @staticmethod
@@ -193,29 +178,14 @@ class Database:
         metadata['name'] = '_'.join(tokens)
         return metadata
 
-    def download_files(self):
-        os.makedirs(self.k_cached, exist_ok=True)
-
-        for name, fid in self.k_files.items():
-            name += '.xls'
-            file_name = os.path.join(self.k_cached, name)
-            gdown.cached_download(
-                url  = 'https://drive.google.com/u/0/uc?id={fid}'.format(fid=fid),
-                path = file_name)
-
-    def load_files(self):
-        def load_df():
-            all_df = {}
-            for name, fid in self.k_files.items():
-                name += '.xls'
-                df = pd.read_excel(os.path.join(self.k_cached, name))
-                df = df.replace('——', np.nan)
-                df.columns = [' '.join(col.split()) for col in df.columns]
-                all_df[name] = df
-            return all_df
-
-        self.download_files()
-        self.df = utils.pickle_cache(os.path.join(self.k_cached, 'all_data.pkl'), load_df)
+    def load_files(self, path):
+        self.df = {}
+        for filename in glob.glob(os.path.join(path, '*.xls*'), recursive=True):
+            print('loading {}'.format(filename))
+            df = pd.read_excel(filename)
+            df = df.replace('——', np.nan)
+            df.columns = [' '.join(col.split()) for col in df.columns]
+            self.df[os.path.basename(filename)] = df
 
     def index_data(self):
         self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'), lambda :

@@ -1,6 +1,6 @@
 import goldenspoon
 
-db = goldenspoon.Database()
+db = goldenspoon.Database('data')
 
 print('## FUND')
 for k, v in db.fund_stats.items():
