@@ -1,1 +1,2 @@
-gdown>=4.0.1
+numpy
+pandas
