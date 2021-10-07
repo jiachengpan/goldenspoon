@@ -129,6 +129,18 @@ class Database:
         self.load_files(path)
         self.index_data()
 
+    def get_funds(self):
+        return self.fund_stats['generic']
+
+    def get_stocks(self):
+        return self.stock_stats['generic']
+
+    def get_fund_stats(self, name):
+        return self.fund_stats[name]
+
+    def get_stock_stats(self, name):
+        return self.stock_stats[name]
+
     @staticmethod
     def compute_column_metadata(col):
         re_report_timestamp = re.compile('.报告期.(\d{4})年(.*)')
@@ -208,7 +220,12 @@ class Database:
             data = indexer.get_indexed_data()
             if data is None:
                 continue
-            result[indexer.name] = data
+
+            cols =  list(self.k_key_columns)
+            cols += list(sorted(set(data.columns.tolist()) - set(cols)))
+            cols =  [col for col in cols if col in data.columns]
+
+            result[indexer.name] = data[cols]
 
         return result
 
