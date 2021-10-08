@@ -108,12 +108,17 @@ class Database:
             self.raw_data[os.path.basename(filename)] = df
 
     def index_data(self):
-        self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'), 
+        self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'),
                 lambda : self.index_by_column_metadata('funds'))
         self.stock_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_stock_stats.pkl'),
                 lambda : self.index_by_column_metadata('stocks'))
 
         self.index_basic_info()
+
+        for df in self.fund_stats.values():
+            df.rename(columns = {'证券代码': '基金代码', '证券名称': '基金名称'})
+        for df in self.stock_stats.values():
+            df.rename(columns = {'证券代码': '股票代码', '证券名称': '股票名称'})
 
     def index_by_column_metadata(self, prefix):
         self.load_files()
@@ -173,3 +178,4 @@ class Database:
         stock_basics = self.get_stocks()[key_columns]
         self.stock_map = dict(stock_basics.values.tolist())
         self.stock_map_reverse = {v: k for k, v in self.stock_map.items()}
+

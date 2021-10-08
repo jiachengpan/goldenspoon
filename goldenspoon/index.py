@@ -71,7 +71,7 @@ class GenericDateIndex(GenericIndexBase):
 # indexer for funds topN stock holding stats
 class TopNStocksIndex(GenericIndexBase):
     name = 'topn_stocks'
-    key_names = ['证券代码', '日期']
+    key_names = ['基金代码', '日期']
 
     def run(self, row, col, metadata):
         k_columns = ('重仓股股票市值', '重仓股持仓占流通股比例', '前十大重仓股名称')
