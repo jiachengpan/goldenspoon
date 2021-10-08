@@ -116,9 +116,9 @@ class Database:
         self.index_basic_info()
 
         for df in self.fund_stats.values():
-            df.rename(columns = {'证券代码': '基金代码', '证券名称': '基金名称'})
+            df.rename(columns = {'证券代码': '基金代码', '证券名称': '基金名称'}, inplace=True)
         for df in self.stock_stats.values():
-            df.rename(columns = {'证券代码': '股票代码', '证券名称': '股票名称'})
+            df.rename(columns = {'证券代码': '股票代码', '证券名称': '股票名称'}, inplace=True)
 
     def index_by_column_metadata(self, prefix):
         self.load_files()
