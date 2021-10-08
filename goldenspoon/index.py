@@ -93,7 +93,7 @@ class TopNStocksIndex(GenericIndexBase):
         if metadata['name'] == k_columns[-1]:
             stock_names = row[col].split(',')
             for i, name in enumerate(stock_names):
-                indexed[key][i]['证券名称'] = name
+                indexed[key][i]['股票名称'] = name
         else:
             topN = metadata['topN']-1
             assert topN >= 0
@@ -105,12 +105,12 @@ class TopNStocksIndex(GenericIndexBase):
         for k, v in self.result.items():
             indicators = []
             for data in v.values():
-                assert '证券名称' in data, 'invalid data: {}'.format(v)
+                assert '股票名称' in data, 'invalid data: {}'.format(v)
                 for indicator, value in data.items():
-                    if indicator == '证券名称':
+                    if indicator == '股票名称':
                         continue
                     indicators.append({
-                        '证券名称': data['证券名称'],
+                        '股票名称': data['股票名称'],
                         'indicator': indicator,
                         'value': value,
                         })
