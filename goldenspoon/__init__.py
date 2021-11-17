@@ -1,2 +1,3 @@
 from .database import Database
-from .indicators import Indicator
+from .base_indicators import Indicator
+from .indicators import compute_indicators

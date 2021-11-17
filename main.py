@@ -1,15 +1,16 @@
 import goldenspoon
 import numpy as np
 
-db = goldenspoon.Database('data')
+import argparse
 
-funds = db.get_funds()
-print(funds.describe())
-print(funds.head()[list(db.k_key_columns)])
+parser = argparse.ArgumentParser(description='Run!')
+parser.add_argument('end_date', type=str, help='')
 
-topn_stock_holdings = db.get_fund_stats('topn_stocks')
-print(topn_stock_holdings.describe())
-print(topn_stock_holdings.head())
-print(topn_stock_holdings.indicator.unique())
-print(np.nan in topn_stock_holdings.value.unique())
+args = parser.parse_args()
 
+db  = goldenspoon.Database('data')
+ind = goldenspoon.Indicator(db, end_date=args.end_date)
+
+database = goldenspoon.compute_indicators(ind)
+print(database.describe())
+database.to_pickle(f'indicators.{args.end_date}.pickle')

@@ -305,8 +305,6 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
     df_final = merge_dfs(dfs)
     return df_final
 
-
-    
 def compute_indicators(db):
     # # raw data
     print("---------------------------get funds info-------------------------------------------")
@@ -346,7 +344,6 @@ def compute_indicators(db):
     print('common part')
 
     # for class stocks_industry_static_indicators xy
-    print('>>> 2')
     stocks_scale = db.get_stock_stats('date')[['股票代码', '股票规模指标']].dropna().groupby(['股票代码']).last().reset_index()
     stocks_scale.columns = ['股票代码', '股票规模指标']
     stocks_hushen300 = db.get_stocks()[['股票代码','是否属于重要指数成份 [所属指数]沪深300指数']]
@@ -355,14 +352,12 @@ def compute_indicators(db):
     ind_stocks_general_new['是否属于重要指数成份 [所属指数]沪深300指数'].fillna('否', inplace=True)
 
     # for class stocks_industry_dynamic_indicators xy
-    print('>>> 3')
     ind_stocks_perf_holding_funds_share = pd.merge(ind_stocks_perf, ind_stocks_holding_funds_share, how='outer', on=['日期', '股票代码'])
     ind_stocks_perf_holding_funds_share['基金持股总值']=ind_stocks_perf_holding_funds_share['基金持股数量 [单位]股']*ind_stocks_perf_holding_funds_share['月收盘价 [复权方式]不复权']
 
     # for class stocks_dynamic_indicators jy
-    print('>>> 4')
+
     # for fund info mapping to stock jy
-    print('>>> 5')
     ind = Indicator(db)
     funds_topn_stocks = ind.get_funds_topn_stocks().reset_index()
     print('funds_topn_stocks')
