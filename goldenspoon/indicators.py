@@ -47,10 +47,10 @@ class stocks_dynamic_indicators():
                 if ind_stocks_quater_count>0:
                     sample = ind_stocks_perf_temp[perf_metric]
                     if ind_stocks_quater_count>=self.past_quater_number:
-                        baseline = ind_stocks_perf_temp.iloc[self.past_quater_number -1][perf_metric]
+                        baseline = ind_stocks_perf_temp.iloc[:self.past_quater_number -1].mean()[perf_metric]
                         sample = sample [:self.past_quater_number]
                     else:
-                        baseline = ind_stocks_perf_temp.iloc[ind_stocks_quater_count-1][perf_metric]
+                        baseline = ind_stocks_perf_temp.iloc[:ind_stocks_quater_count-1].mean()[perf_metric]
                         sample = sample [:ind_stocks_quater_count]
                     change = (sample - baseline)/baseline
                     change_mean = change.mean()

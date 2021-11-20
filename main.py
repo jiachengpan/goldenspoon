@@ -20,7 +20,7 @@ columns = [
         goldenspoon.Indicator.k_stock_column_close_price,
         ]
 for i in range(3):
-    new_end_date = end_date + relativedelta(months=i+1)
+    new_end_date   = end_date + relativedelta(months=i+1)
 
     print(i, end_date, new_end_date)
 
@@ -31,7 +31,19 @@ for i in range(3):
             .last()
     labels.to_pickle(f'labels.{i+1}_month.{args.end_date}.pickle')
 
-ind = goldenspoon.Indicator(db, end_date=end_date.date().isoformat())
+ind = goldenspoon.Indicator(db,
+        start_date = (end_date + relativedelta(months=-12)).date().isoformat(),
+        end_date   = end_date.date().isoformat())
 database = goldenspoon.compute_indicators(ind)
+
+# filter the presumbly correct indicators
+k_filter_columns = [
+        'margin_diff_mean',
+        'amplitutde_mean',
+        ]
+
+for col in k_filter_columns:
+    database = database[database[col] <= 10]
+
 print(database.describe())
 database.to_pickle(f'indicators.{args.end_date}.pickle')
