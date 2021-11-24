@@ -357,6 +357,7 @@ def compute_indicators(ind):
     print('>>> 3')
     ind_stocks_perf_holding_funds_share = pd.merge(ind_stocks_perf, ind_stocks_holding_funds_share, how='outer', on=['日期', '股票代码'])
     ind_stocks_perf_holding_funds_share['基金持股总值']=ind_stocks_perf_holding_funds_share['基金持股数量 [单位]股']*ind_stocks_perf_holding_funds_share['月收盘价 [复权方式]不复权']
+    ind_stocks_perf_holding_funds_share.dropna(subset=['基金持股总值'], inplace=True)
 
     # for class stocks_dynamic_indicators jy
     print('>>> 4')
