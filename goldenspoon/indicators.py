@@ -330,6 +330,8 @@ def compute_indicators(ind):
     ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
     ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
 
+    ind_stocks_holding_funds_share.dropna(subset=['基金持股数量 [单位]股'], inplace=True)
+
     # ## Fund Indicators
     print('fund indicators')
     ind_funds_general = ind.get_funds_general()
