@@ -5,7 +5,11 @@ import sys
 import pandas as pd
 import numpy as np
 
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
 sys.path.append('goldenspoon')
+
+end_date1=None
 
 from goldenspoon import Database, Indicator
 
@@ -33,7 +37,6 @@ class stocks_dynamic_indicators():
         stock_id_list = []
         change_mean_list = []
         change_std_list = []
-
         firstindustry_count = compute_firstindustry_count(self.ind_stocks_general)
 
         for industry in firstindustry_count.keys():
@@ -47,11 +50,13 @@ class stocks_dynamic_indicators():
                 if ind_stocks_quater_count>0:
                     sample = ind_stocks_perf_temp[perf_metric]
                     if ind_stocks_quater_count>=self.past_quater_number:
-                        baseline = ind_stocks_perf_temp.iloc[:self.past_quater_number -1].mean()[perf_metric]
-                        sample = sample [:self.past_quater_number]
+                        # baseline = ind_stocks_perf_temp.iloc[:self.past_quater_number-1].mean()[perf_metric]
+                        baseline = ind_stocks_perf_temp.iloc[self.past_quater_number -1][perf_metric]
+                        sample = sample [:self.past_quater_number-1]
                     else:
-                        baseline = ind_stocks_perf_temp.iloc[:ind_stocks_quater_count-1].mean()[perf_metric]
-                        sample = sample [:ind_stocks_quater_count]
+                        # baseline = ind_stocks_perf_temp.iloc[:ind_stocks_quater_count-1].mean()[perf_metric]
+                        baseline = ind_stocks_perf_temp.iloc[ind_stocks_quater_count-1][perf_metric]
+                        sample = sample [:ind_stocks_quater_count-1]
                     change = (sample - baseline)/baseline
                     change_mean = change.mean()
                     change_std = change.std()
@@ -181,7 +186,7 @@ class stocks_industry_static_indicators():
         def function(stock_id, stock_industry):
             dict_stock_indicator[stock_id] = dict_industry_indicator[stock_industry]
             return
-        self.ind_stocks_general_new.apply(lambda x: function(x['股票代码'], x[self.industry_level]), axis = 1) ## ind_stocks_general_new存在
+        self.ind_stocks_general_new.apply(lambda x: function(x['股票代码'], x[self.industry_level]), axis = 1)
         return dict_stock_indicator
 
 class stocks_industry_dynamic_indicators():
@@ -207,29 +212,30 @@ class stocks_industry_dynamic_indicators():
                 ind_stocks_perf_temp = (df_func.loc[df_func['股票代码']==stock_id])
                 ind_stocks_quater_count = ind_stocks_perf_temp.shape[0]
 
-                if ind_stocks_quater_count>0:
+                if ind_stocks_quater_count > 0:
                     sample = ind_stocks_perf_temp[perf_metric]
-
-                    if ind_stocks_quater_count>=self.past_quater_number:
-                        baseline = ind_stocks_perf_temp.iloc[self.past_quater_number-1][perf_metric]
-                        sample = sample [:self.past_quater_number]
+                    if ind_stocks_quater_count >= self.past_quater_number:
+                        baseline = ind_stocks_perf_temp.iloc[self.past_quater_number-1][perf_metric] 
+                        sample = sample[:self.past_quater_number-1]
                     else:
                         baseline = ind_stocks_perf_temp.iloc[ind_stocks_quater_count-1][perf_metric]
-                        sample = sample [:ind_stocks_quater_count]
+                        sample = sample[:ind_stocks_quater_count-1]
 
                     change = (sample - baseline)/baseline
                     change_mean = change.mean()
                     change_std = change.std()
-                    change_mean_list.append(change_mean)
-                    change_std_list.append(change_std)
-                industry_stock_id_list.append(stock_id)
-            change_mean = np.array(change_mean_list).mean()
-            change_std = np.array(change_std_list).mean()
-            for i in range(len(industry_stock_id_list)):
-                industry_change_mean_list.append(change_mean)
-                industry_change_std_list.append(change_std)
-            stock_id_list.extend(industry_stock_id_list)
+                    if (not np.isnan(change_mean) and (not np.isnan(change_std))):
+                        change_mean_list.append(change_mean)
+                        change_std_list.append(change_std)
 
+                industry_stock_id_list.append(stock_id)
+            ## NOTE different: change_std=(all stock std' mean) or change_std=(change_mean' std) 
+            industry_change_mean = np.array(change_mean_list).mean()
+            industry_change_std = np.array(change_std_list).mean()
+            for i in range(len(industry_stock_id_list)):
+                industry_change_mean_list.append(industry_change_mean)
+                industry_change_std_list.append(industry_change_std)
+            stock_id_list.extend(industry_stock_id_list)
         return stock_id_list, industry_change_mean_list, industry_change_std_list
 
 ## main func --> get func
@@ -244,6 +250,8 @@ def get_stocks_industry_static_indicators(ind_stocks_general_new):
     indicator_stock_scales = stocks_industry_static.stocks_industry_static_indicators(industry_metric='股票规模指标')
 
     df_stock_hushen300 = dict_to_df(indicator_stock_hushen300)
+    df_stock_hushen300 = df_stock_hushen300.drop(['否'],axis=1)
+
     df_stock_styles = dict_to_df(indicator_stock_styles)
     df_stock_scales = dict_to_df(indicator_stock_scales)
 
@@ -258,8 +266,10 @@ def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, 
     avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_industry_dynamic.q_quater_mean_std('当月成交均价 [复权方式]不复权',ind_stocks_perf)
     # b. Average rate of change and standard deviation of Total Fund Shareholding over the past N quarters
     fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std = stocks_industry_dynamic.q_quater_mean_std('基金持股总值',ind_stocks_perf_holding_funds_share)
+    # assert(0)
     # c. Average rate of change and standard deviation of Number of Fund Companies over the past N quarters
     fund_number_id_list, fund_number_mean, fund_number_std = stocks_industry_dynamic.q_quater_mean_std('持股基金家数 [股本类型]流通股本',ind_stocks_perf_holding_funds_share)
+
     assert len(avg_price_stock_id_list) == len(fund_shareholding_id_list) == len(fund_number_id_list)
 
     df_avg_price = meanstd_list_to_df(avg_price_stock_id_list, avg_price_mean, avg_price_std, flag='avg_price')
@@ -298,12 +308,17 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
     df_fund_owner_affinity= meanstd_list_to_df(fund_owner_affinity_stock_id_list, fund_owner_affinity_mean, fund_owner_affinity_std, flag='fund_owner_affinity')
     df_fund_revisit = cumstomlist_to_df(fund_revisit_stock_id_list, fund_revisit_mean,flags=['fund_revisit'])
     df_cyclical_industry = cumstomlist_to_df( cyclical_industry_stock_id_list, cyclical_industry, flags=['cyclical_industry'])
-    dfs = [df_close_price,df_avg_price,df_turnover_rate,df_amplitutde,df_margin_diff,df_share_ratio_of_funds,df_num_of_funds,df_fund_owner_affinity,df_fund_revisit,df_cyclical_industry]
+    
+    ##  NOTE drop indicator df_fund_revisit, check
+    dfs = [df_close_price,df_avg_price,df_turnover_rate,df_amplitutde,df_margin_diff,df_share_ratio_of_funds,df_num_of_funds,df_fund_owner_affinity,df_cyclical_industry]
+    # dfs = [df_close_price,df_avg_price,df_turnover_rate,df_amplitutde,df_margin_diff,df_share_ratio_of_funds,df_num_of_funds,df_fund_owner_affinity,df_fund_revisit,df_cyclical_industry]
 
     df_final = merge_dfs(dfs)
     return df_final
 
-def compute_indicators(ind):
+def compute_indicators(ind,end_date):
+    global end_date1 
+    end_date1 = end_date
     # # raw data
     # print("---------------------------get funds info-------------------------------------------")
     # fund_generic = db.get_funds().info()
@@ -330,8 +345,6 @@ def compute_indicators(ind):
     ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
     ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
 
-    ind_stocks_holding_funds_share.dropna(subset=['基金持股数量 [单位]股'], inplace=True)
-
     # ## Fund Indicators
     print('fund indicators')
     ind_funds_general = ind.get_funds_general()
@@ -341,42 +354,34 @@ def compute_indicators(ind):
     ## common part
     print('common part')
 
-    # for class stocks_industry_static_indicators xy
     print('>>> 2')
+    # for class stocks_industry_static_indicators xy
     stocks_scale = ind.get_stocks_timed()[['股票代码', '股票规模指标']].dropna().groupby(['股票代码']).last().reset_index()
     stocks_scale.columns = ['股票代码', '股票规模指标']
     stocks_hushen300 = ind.db.get_stocks()[['股票代码','是否属于重要指数成份 [所属指数]沪深300指数']]
-    print('DBG: stocks_hushen300')
-    print(stocks_hushen300)
-    print(stocks_scale)
-    print(ind_stocks_general)
 
     ind_stocks_general_new = pd.merge(ind_stocks_general, stocks_scale, how='inner', on=['股票代码'])
     ind_stocks_general_new = pd.merge(ind_stocks_general_new, stocks_hushen300, how='inner', on=['股票代码'])
     ind_stocks_general_new['是否属于重要指数成份 [所属指数]沪深300指数'].fillna('否', inplace=True)
 
-    # for class stocks_industry_dynamic_indicators xy
     print('>>> 3')
+    # for class stocks_industry_dynamic_indicators xy
     ind_stocks_perf_holding_funds_share = pd.merge(ind_stocks_perf, ind_stocks_holding_funds_share, how='outer', on=['日期', '股票代码'])
     ind_stocks_perf_holding_funds_share['基金持股总值']=ind_stocks_perf_holding_funds_share['基金持股数量 [单位]股']*ind_stocks_perf_holding_funds_share['月收盘价 [复权方式]不复权']
+    ## NOTE drop nan data by '基金持股总值'
     ind_stocks_perf_holding_funds_share.dropna(subset=['基金持股总值'], inplace=True)
 
-    # for class stocks_dynamic_indicators jy
     print('>>> 4')
+    # for class stocks_dynamic_indicators jy
     # for fund info mapping to stock jy
-    print('>>> 5')
     funds_topn_stocks = ind.get_funds_topn_stocks().reset_index()
-    print('funds_topn_stocks')
     funds_topn_stocks.columns = ['日期','基金代码','股票名称','仓股持仓占流通股比例','重仓股股票市值']
     new_df = pd.merge(ind_stocks_perf,funds_topn_stocks,how='outer',on=['日期','股票名称'])
     ind_stocks_perf_with_fund = pd.merge(new_df,ind_funds_general,how='outer',on=['日期','基金代码'])
 
     df_stocks_industry_static_indicators = get_stocks_industry_static_indicators(ind_stocks_general_new)
-    print("df_stocks_industry_static_indicators:",df_stocks_industry_static_indicators)
     df_stocks_industry_dynamic_indicators = get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share)
-    print("df_stocks_industry_dynamic_indicators:",df_stocks_industry_dynamic_indicators)
-    df_stocks_dynamic_indicators = get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_holding_funds_share, ind_stocks_perf_with_fund)
-    print("df_stocks_dynamic_indicators:",df_stocks_dynamic_indicators)
+    df_stocks_dynamic_indicators = get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share, ind_stocks_perf_with_fund)
 
     dfs = [
             df_stocks_industry_static_indicators,
