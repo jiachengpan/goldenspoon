@@ -325,7 +325,7 @@ if __name__ == '__main__':
 
         #save_path = saveflag +'/' + str(predict_month_id) +'month/'
 
-        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30']
+        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30', '2021-09-30']
 
         for dates in range(len(date_list)):
             end_date = date_list[dates]
