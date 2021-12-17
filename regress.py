@@ -130,12 +130,12 @@ class Regress():
             plt.savefig(self.save_path + flag)
             start_ += show_interval
             end_ += show_interval
-        
+
         ## draw the y_pred and y_test scatter diagram
         plt.figure()
         x = np.linspace(0,1.0, len(y_pred))
         plt.scatter(x, y_pred, c='r', marker='*')
-        plt.scatter(x, y_test, c='', marker='o',edgecolors='g')
+        plt.scatter(x, y_test, c='g', marker='o',edgecolors='g')
         plt.savefig(self.save_path + 'y_scatter.png')
 
 
@@ -172,9 +172,9 @@ class Regress():
         confusion_flag = np.array([['TN', 'FP'], ['FN', 'TP']])
         confusion_matrix = np.array([[TN, FP], [FN, TP]])
         plt.matshow(confusion_matrix, cmap=plt.cm.Greens)
-        plt.colorbar()   
+        plt.colorbar()
         for i in range(2):
-            for j in range(2):     
+            for j in range(2):
                 plt.annotate(confusion_flag[i,j] + ' : ' + str(confusion_matrix[i,j]), xy=(i, j), horizontalalignment='center', verticalalignment='center')
                 plt.ylabel('True label')
                 plt.xlabel('Predicted label')
@@ -230,6 +230,6 @@ if __name__ == '__main__':
         save_path=saveflag+'/' + str(predict_month_id) +'month/'
         if not os.path.exists(save_path):
             os.mkdir(save_path)
-        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30']
+        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30','2021-09-30']
         r = Regress(linear_model.LinearRegression(),pickle_path,save_path,date_list,predict_n_month,predict_month_id,predict_label_type,all_indicator_use,indicator_use_list)
         r.run()
