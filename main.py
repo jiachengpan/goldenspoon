@@ -5,14 +5,20 @@ import datetime
 from dateutil import parser
 import calendar
 from dateutil.relativedelta import relativedelta
+import os
 
 argparser = argparse.ArgumentParser(description='Run!')
 argparser.add_argument('end_date', type=str, help='')
+argparser.add_argument('regress_dir', type=str, help='')
+argparser.add_argument('past_quater_number', type=str, help='')
 args = argparser.parse_args()
 
 end_date = parser.parse(args.end_date)
 db = goldenspoon.Database('data')
-regress_dir='./regress_data'
+regress_dir=args.regress_dir
+past_quater_number=args.past_quater_number
+if not os.path.exists(regress_dir):
+    os.makedirs(regress_dir)
 
 columns = [
         goldenspoon.Indicator.k_column_date,
@@ -53,17 +59,20 @@ for i in range(3):
     labels.dropna(inplace=True)
     labels.to_pickle(f'{regress_dir}/labels.{i+1}_month.{args.end_date}.pickle')
 
-database = goldenspoon.compute_indicators(ind,end_date)
+database = goldenspoon.compute_indicators(ind,end_date,past_quater_number)
 
 # filter the presumbly correct indicators
-k_filter_columns = ['avg_price_mean_x', 'avg_price_std_x', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean_y', 'avg_price_std_y', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
-
+# k_filter_columns = ['avg_price_mean_x', 'avg_price_std_x', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean_y', 'avg_price_std_y', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+k_filter_columns = database.columns.values.tolist()
 for col in k_filter_columns:
-    database = database[database[col] <= 10]
+    print("k_filter_columns:",k_filter_columns)
+    print("database[col]:",database[col])
+    if col not in ['id','成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股']:
+        database = database[database[col] <= 10]
 
 database = database.fillna(0.0)
 
-print("-----database:",database)
-print("-----end_date:",end_date)
-print("-----database.describe:",database.describe())
+print("-----database:{}\n".format(database))
+print("-----end_date:{}\n".format(end_date))
+print("-----database.describe:{}\n".format(database.describe()))
 database.to_pickle(f'{regress_dir}/indicators.{args.end_date}.pickle')

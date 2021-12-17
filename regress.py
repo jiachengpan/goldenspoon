@@ -8,6 +8,7 @@ from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error , r2_score
 import os
+from csv import writer
 
 def print_to_log(filename, _prefix, log_content, flag=None):
     if flag == 'dict':
@@ -30,11 +31,12 @@ def print_to_log(filename, _prefix, log_content, flag=None):
         f.close()
 
 class Regress():
-    def __init__(self,model, pickle_path, save_path, date_list, predict_n_month, predict_month_id, predict_label_type, all_indicator_use=True, indicator_use_list=[]):
+    def __init__(self,model, pickle_path, save_path, date_list,predict_list, predict_n_month, predict_month_id, predict_label_type, all_indicator_use=True, indicator_use_list=[]):
         self.model = model
         self.pickle_path = pickle_path
         self.save_path = save_path
         self.date_list = date_list
+        self.predict_list = predict_list
         self.predict_n_month = predict_n_month
         self.predict_label_type = '_' + predict_label_type # 'predict_pricechange' or 'predict_price'
         self.predict_month_id = str(predict_month_id) + self.predict_label_type
@@ -46,7 +48,6 @@ class Regress():
         df_indicator_label = df_indicator
         for m in range(len(df_label_list)):
             df_label = df_label_list[m]
-            # data = df_label['日期'][0]
             df_label = df_label.reset_index()
             if m==0:
                 df_label.columns = ['id', 'date', '0_label']
@@ -68,7 +69,6 @@ class Regress():
         for filename in label_pickle_list:
             df_label = pd.read_pickle(filename)
             df_label_list.append(df_label)
-            # print("TODO-----filename:{}, df_label:{}".format(filename, df_label))
 
         df_indicator_label = self.merge_df_indicator_label(df_indicator, df_label_list)
         return df_indicator_label
@@ -88,7 +88,10 @@ class Regress():
     def data_preprocess(self):
         totaldate_X_df = pd.DataFrame()
         totaldate_Y_df = pd.DataFrame()
+
+        ### 
         for date in self.date_list:
+            print("train date:",date)
             indicator_pickle = self.pickle_path + 'indicators.' + date + '.pickle'
             df_indicator = pd.read_pickle(indicator_pickle)
             self.all_indicator_list = list(df_indicator.columns.values)[1:]
@@ -103,9 +106,28 @@ class Regress():
                 totaldate_Y_df = pd.concat([totaldate_Y_df, Y_df], axis=0)
             else:
                 print("{} is a empty dataframe!".format(indicator_pickle))
-        x_train, x_test, y_train, y_test = train_test_split(totaldate_X_df, totaldate_Y_df, random_state=1)
-        return x_train, x_test, y_train, y_test
+        x_train, y_train = totaldate_X_df, totaldate_Y_df
+        # x_train, x_test, y_train, y_test = train_test_split(totaldate_X_df, totaldate_Y_df, random_state=1)
 
+        ###
+        for date in self.predict_list:
+            print("test date:",date)
+            indicator_pickle = self.pickle_path + 'indicators.' + date + '.pickle'
+            df_indicator = pd.read_pickle(indicator_pickle)
+            self.all_indicator_list = list(df_indicator.columns.values)[1:]
+            if not df_indicator.empty:
+                label_pickle_list = []
+                for m in range(self.predict_n_month+1): ## include 0_month
+                    label_pickle = self.pickle_path + 'labels.' + str(m) + '_month.'+ date +'.pickle'
+                    label_pickle_list.append(label_pickle)
+                df_indicator_label = self.merge_indicator_label(df_indicator, label_pickle_list)
+                X_df, Y_df = self.get_train_indicator_label(df_indicator_label)
+                totaldate_X_df = pd.concat([totaldate_X_df, X_df], axis=0)
+                totaldate_Y_df = pd.concat([totaldate_Y_df, Y_df], axis=0)
+            else:
+                print("{} is a empty dataframe!".format(indicator_pickle))
+        x_test, y_test = totaldate_X_df, totaldate_Y_df
+        return x_train, x_test, y_train, y_test
 
     ## 2. result visualization
     def draw(self, y_pred, y_test, cur_stock_price_test, R2, show_interval=None):
@@ -130,14 +152,13 @@ class Regress():
             plt.savefig(self.save_path + flag)
             start_ += show_interval
             end_ += show_interval
-
+        
         ## draw the y_pred and y_test scatter diagram
         plt.figure()
         x = np.linspace(0,1.0, len(y_pred))
         plt.scatter(x, y_pred, c='r', marker='*')
-        plt.scatter(x, y_test, c='g', marker='o',edgecolors='g')
+        plt.scatter(x, y_test, c='', marker='o',edgecolors='g')
         plt.savefig(self.save_path + 'y_scatter.png')
-
 
     ## 3. confusion_matrix
     def perf_measure(self, y_pred, y_true, cur_stock_price_test):
@@ -172,9 +193,9 @@ class Regress():
         confusion_flag = np.array([['TN', 'FP'], ['FN', 'TP']])
         confusion_matrix = np.array([[TN, FP], [FN, TP]])
         plt.matshow(confusion_matrix, cmap=plt.cm.Greens)
-        plt.colorbar()
+        plt.colorbar()   
         for i in range(2):
-            for j in range(2):
+            for j in range(2):     
                 plt.annotate(confusion_flag[i,j] + ' : ' + str(confusion_matrix[i,j]), xy=(i, j), horizontalalignment='center', verticalalignment='center')
                 plt.ylabel('True label')
                 plt.xlabel('Predicted label')
@@ -183,12 +204,50 @@ class Regress():
 
         return TP, FP, TN, FN
 
-    ## 4. Linear regression
+    ## 4. drop stocks with small changes
+    def drop_small_change_stock(self, y_pred, y_true, drop_ponit):
+        y_pred = np.array(y_pred).flatten()
+        y_true = np.array(y_true).flatten()
+        valid_stock_list = np.where(np.absolute(y_pred)>drop_ponit)
+        valid_stock_list = np.asarray(valid_stock_list)
+        valid_stock_list = valid_stock_list.transpose()
+        y_pred_valid = y_pred[valid_stock_list]
+        y_true_valid = y_true[valid_stock_list]
+        return valid_stock_list, y_pred_valid, y_true_valid
+
+    ## 5. assess the prediction correcness of each stock
+    def perf_measure_per_stock(self, full_stock_list, valid_stock_list, y_pred,y_true):
+        stock_pred_correctness = np.zeros(full_stock_list)
+        valid_stock_list_len = valid_stock_list.shape[0]
+        #print ((valid_stock_list.shape))
+        for i in range (valid_stock_list_len):
+            n = valid_stock_list[i]
+            y_pred_case = y_pred[i]
+            y_true_case = y_true[i]
+            ## share prices are rising in y_true, also y_pred
+            if (y_true_case) >= 0 and (y_pred_case) >= 0:
+                stock_pred_correctness[n] = 1 # TP
+                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+            ## share prices are rising in y_pred, but falling in y_true
+            if (y_true_case) < 0 and (y_pred_case) >= 0:
+                stock_pred_correctness[n] = 2 # TF
+                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+            ## share prices are falling in y_true, also y_pred
+            if (y_true_case) < 0 and (y_pred_case) < 0:
+                stock_pred_correctness[n] = 3 # TN
+                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+            ## share prices are rising in y_true, but falling in y_pred
+            if (y_true_case) >= 0 and (y_pred_case) < 0:
+                stock_pred_correctness[n] = 4 # FN
+                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+        return stock_pred_correctness
+
+    ## Linear regression
     def run(self):
         ## get train/test data
         x_train, x_test, y_train, y_test = self.data_preprocess()
         print("x_train.shape:{},\n x_test.shape:{},\n y_train.shape:{},\n y_test.shape:{},\n".format(x_train.shape, x_test.shape, y_train.shape, y_test.shape))
-
+        # assert(0)
         cur_stock_price_train = y_train['0_label']
         cur_stock_price_test = y_test['0_label']
         y_train = y_train[self.predict_month_id]
@@ -197,7 +256,6 @@ class Regress():
         ## model training
         self.model.fit(x_train, y_train)
         y_pred = self.model.predict(x_test)
-        ## TODO p_value t_value
         R2_y_pred_y_test = r2_score(y_test, y_pred)
 
         if self.all_indicator_use:
@@ -212,16 +270,25 @@ class Regress():
                 f.write('\n' )
             f.close()
 
-        TP, FP, TN, FN = self.perf_measure(y_pred, y_test, cur_stock_price_test)
+        drop_ponit = 0.15
+        valid_stock_list, y_pred_valid, y_true_valid = self.drop_small_change_stock(y_pred, y_test, drop_ponit)
+        full_stock_list = y_test.shape[0]
+        # TP, FP, TN, FN = self.perf_measure(y_pred, y_test, cur_stock_price_test)
+        TP, FP, TN, FN = self.perf_measure(y_pred_valid, y_true_valid, cur_stock_price_test)
+        stock_pred_correctness = self.perf_measure_per_stock(full_stock_list,valid_stock_list,y_pred_valid,y_true_valid)
+        with open(self.save_path + 'stock_pred_correctness.csv', 'a', newline='') as f_object: 
+            writer_object = writer(f_object)
+            writer_object.writerow(stock_pred_correctness)
+            f_object.close()
         print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
-        self.draw(y_pred, y_test, cur_stock_price_test, R2_y_pred_y_test, show_interval=50)
+        # self.draw(y_pred, y_test, cur_stock_price_test, R2_y_pred_y_test, show_interval=50)
         return
 
 if __name__ == '__main__':
     ## base parameter
     for predict_month_id in [1,2,3]:
-        dataflag='regress_data'
-        saveflag='regress_result'
+        dataflag='regress_data_new_2'
+        saveflag='regress_result_new_2'
         predict_n_month=3
         all_indicator_use=True
         predict_label_type='predict_pricechange' # 'predict_pricechange' or 'predict_price'
@@ -229,7 +296,8 @@ if __name__ == '__main__':
         pickle_path='./'+dataflag+'/'
         save_path=saveflag+'/' + str(predict_month_id) +'month/'
         if not os.path.exists(save_path):
-            os.mkdir(save_path)
-        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30','2021-09-30']
-        r = Regress(linear_model.LinearRegression(),pickle_path,save_path,date_list,predict_n_month,predict_month_id,predict_label_type,all_indicator_use,indicator_use_list)
+            os.makedirs(save_path)
+        date_list = ['2020-09-30','2020-12-31','2021-03-31','2021-06-30']
+        predict_list = ['2021-09-30']
+        r = Regress(linear_model.LinearRegression(),pickle_path,save_path,date_list,predict_list,predict_n_month,predict_month_id,predict_label_type,all_indicator_use,indicator_use_list)
         r.run()

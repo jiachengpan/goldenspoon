@@ -17,12 +17,10 @@ k_cyclical_industry_keys = ['原材料','汽车与汽车零部件','房地产', 
 
 def compute_firstindustry_count(ind_stocks_general):
   firstindustry_count = ind_stocks_general['所属中证行业(2016) [行业类别]1级'].value_counts()
-  # firstindustry_keys = firstindustry_count.keys() # ['工业','信息技术','可选消费','原材料','医药卫生','金融地产','主要消费','公用事业','电信业务','能源']
   return firstindustry_count
 
 def compute_secondindustry_count(ind_stocks_general):
   secondindustry_count = ind_stocks_general['所属中证行业(2016) [行业类别]2级'].value_counts()
-  # secondindustry_keys = secondindustry_count.keys()
   return secondindustry_count
 
 class stocks_dynamic_indicators():
@@ -50,11 +48,9 @@ class stocks_dynamic_indicators():
                 if ind_stocks_quater_count>0:
                     sample = ind_stocks_perf_temp[perf_metric]
                     if ind_stocks_quater_count>=self.past_quater_number:
-                        # baseline = ind_stocks_perf_temp.iloc[:self.past_quater_number-1].mean()[perf_metric]
                         baseline = ind_stocks_perf_temp.iloc[self.past_quater_number -1][perf_metric]
                         sample = sample [:self.past_quater_number-1]
                     else:
-                        # baseline = ind_stocks_perf_temp.iloc[:ind_stocks_quater_count-1].mean()[perf_metric]
                         baseline = ind_stocks_perf_temp.iloc[ind_stocks_quater_count-1][perf_metric]
                         sample = sample [:ind_stocks_quater_count-1]
                     change = (sample - baseline)/baseline
@@ -260,19 +256,19 @@ def get_stocks_industry_static_indicators(ind_stocks_general_new):
     return df_final
 
 def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share):
-    past_quater_number = 4
+    # past_quater_number = 3
     stocks_industry_dynamic = stocks_industry_dynamic_indicators(ind_stocks_general, past_quater_number)
+
     # a. Average rate of change and standard deviation of Stock Price over the past N quarters
-    avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_industry_dynamic.q_quater_mean_std('当月成交均价 [复权方式]不复权',ind_stocks_perf)
+    avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_industry_dynamic.q_quater_mean_std('区间日均总市值 [起始交易日期]截止日3月前 [单位]亿元',ind_stocks_perf)
     # b. Average rate of change and standard deviation of Total Fund Shareholding over the past N quarters
     fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std = stocks_industry_dynamic.q_quater_mean_std('基金持股总值',ind_stocks_perf_holding_funds_share)
-    # assert(0)
     # c. Average rate of change and standard deviation of Number of Fund Companies over the past N quarters
     fund_number_id_list, fund_number_mean, fund_number_std = stocks_industry_dynamic.q_quater_mean_std('持股基金家数 [股本类型]流通股本',ind_stocks_perf_holding_funds_share)
 
     assert len(avg_price_stock_id_list) == len(fund_shareholding_id_list) == len(fund_number_id_list)
 
-    df_avg_price = meanstd_list_to_df(avg_price_stock_id_list, avg_price_mean, avg_price_std, flag='avg_price')
+    df_avg_price = meanstd_list_to_df(avg_price_stock_id_list, avg_price_mean, avg_price_std, flag='market_value')
     df_fund_shareholding = meanstd_list_to_df(fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std, flag='fund_shareholding')
     df_fund_number = meanstd_list_to_df(fund_number_id_list, fund_number_mean, fund_number_std, flag='fund_number')
 
@@ -281,7 +277,7 @@ def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, 
     return df_final
 
 def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_holding_funds_share, ind_stocks_perf_with_fund):
-    past_quater_number = 4
+    # past_quater_number = 3
     minimal_fund_number = 4
     stocks_dynamic = stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_perf_with_fund, past_quater_number,minimal_fund_number)
 
@@ -306,19 +302,19 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
     df_share_ratio_of_funds = meanstd_list_to_df(share_ratio_of_funds_stock_id_list, share_ratio_of_funds_mean, share_ratio_of_funds_std, flag='share_ratio_of_funds')
     df_num_of_funds= meanstd_list_to_df(num_of_funds_stock_id_list, num_of_funds_mean, num_of_funds_std, flag='num_of_funds')
     df_fund_owner_affinity= meanstd_list_to_df(fund_owner_affinity_stock_id_list, fund_owner_affinity_mean, fund_owner_affinity_std, flag='fund_owner_affinity')
-    df_fund_revisit = cumstomlist_to_df(fund_revisit_stock_id_list, fund_revisit_mean,flags=['fund_revisit'])
+    # df_fund_revisit = cumstomlist_to_df(fund_revisit_stock_id_list, fund_revisit_mean,flags=['fund_revisit'])
     df_cyclical_industry = cumstomlist_to_df( cyclical_industry_stock_id_list, cyclical_industry, flags=['cyclical_industry'])
-    
-    ##  NOTE drop indicator df_fund_revisit, check
+
     dfs = [df_close_price,df_avg_price,df_turnover_rate,df_amplitutde,df_margin_diff,df_share_ratio_of_funds,df_num_of_funds,df_fund_owner_affinity,df_cyclical_industry]
-    # dfs = [df_close_price,df_avg_price,df_turnover_rate,df_amplitutde,df_margin_diff,df_share_ratio_of_funds,df_num_of_funds,df_fund_owner_affinity,df_fund_revisit,df_cyclical_industry]
 
     df_final = merge_dfs(dfs)
     return df_final
 
-def compute_indicators(ind,end_date):
+def compute_indicators(ind,end_date,past_quater_number_):
+    global past_quater_number
     global end_date1 
     end_date1 = end_date
+    past_quater_number = int(past_quater_number_)
     # # raw data
     # print("---------------------------get funds info-------------------------------------------")
     # fund_generic = db.get_funds().info()
