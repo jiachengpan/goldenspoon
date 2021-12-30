@@ -83,13 +83,13 @@ class Regress():
         self.end_date_stock_price = df_indicator_label.iloc[:,df_indicator_label.columns.str.endswith('0_label')]
         Y_df = df_indicator_label.iloc[:,df_indicator_label.columns.str.endswith(self.predict_month_id)]
         Y_df = pd.concat([self.end_date_stock_price, Y_df], axis=1)
-        return X_df, Y_df
+        ID_df = df_indicator_label.iloc[:,df_indicator_label.columns.str.endswith('id')]
+        return X_df, Y_df, ID_df
 
     def data_preprocess(self):
+        ### 
         totaldate_X_df = pd.DataFrame()
         totaldate_Y_df = pd.DataFrame()
-
-        ### 
         for date in self.date_list:
             print("train date:",date)
             indicator_pickle = self.pickle_path + 'indicators.' + date + '.pickle'
@@ -101,7 +101,7 @@ class Regress():
                     label_pickle = self.pickle_path + 'labels.' + str(m) + '_month.'+ date +'.pickle'
                     label_pickle_list.append(label_pickle)
                 df_indicator_label = self.merge_indicator_label(df_indicator, label_pickle_list)
-                X_df, Y_df = self.get_train_indicator_label(df_indicator_label)
+                X_df, Y_df, train_ID_df = self.get_train_indicator_label(df_indicator_label)
                 totaldate_X_df = pd.concat([totaldate_X_df, X_df], axis=0)
                 totaldate_Y_df = pd.concat([totaldate_Y_df, Y_df], axis=0)
             else:
@@ -121,13 +121,11 @@ class Regress():
                     label_pickle = self.pickle_path + 'labels.' + str(m) + '_month.'+ date +'.pickle'
                     label_pickle_list.append(label_pickle)
                 df_indicator_label = self.merge_indicator_label(df_indicator, label_pickle_list)
-                X_df, Y_df = self.get_train_indicator_label(df_indicator_label)
-                totaldate_X_df = pd.concat([totaldate_X_df, X_df], axis=0)
-                totaldate_Y_df = pd.concat([totaldate_Y_df, Y_df], axis=0)
+                X_df, Y_df, test_ID_df = self.get_train_indicator_label(df_indicator_label)
             else:
                 print("{} is a empty dataframe!".format(indicator_pickle))
-        x_test, y_test = totaldate_X_df, totaldate_Y_df
-        return x_train, x_test, y_train, y_test
+        x_test, y_test = X_df, Y_df
+        return x_train, x_test, y_train, y_test, test_ID_df
 
     ## 2. result visualization
     def draw(self, y_pred, y_test, cur_stock_price_test, R2, show_interval=None):
@@ -205,53 +203,57 @@ class Regress():
         return TP, FP, TN, FN
 
     ## 4. drop stocks with small changes
-    def drop_small_change_stock(self, y_pred, y_true, drop_ponit):
+    def drop_small_change_stock(self, y_pred, y_true, drop_ponit,test_ID_df):
         y_pred = np.array(y_pred).flatten()
         y_true = np.array(y_true).flatten()
+        test_ID_df = np.array(test_ID_df).flatten()
         valid_stock_list = np.where(np.absolute(y_pred)>drop_ponit)
         valid_stock_list = np.asarray(valid_stock_list)
         valid_stock_list = valid_stock_list.transpose()
         y_pred_valid = y_pred[valid_stock_list]
         y_true_valid = y_true[valid_stock_list]
-        return valid_stock_list, y_pred_valid, y_true_valid
+        y_ID_valid = test_ID_df[valid_stock_list]
+        return valid_stock_list, y_pred_valid, y_true_valid, y_ID_valid
 
     ## 5. assess the prediction correcness of each stock
-    def perf_measure_per_stock(self, full_stock_list, valid_stock_list, y_pred,y_true):
+    def perf_measure_per_stock(self, full_stock_list, valid_stock_list, y_pred,y_true,y_ID_valid):
         stock_pred_correctness = np.zeros(full_stock_list)
         valid_stock_list_len = valid_stock_list.shape[0]
         #print ((valid_stock_list.shape))
         for i in range (valid_stock_list_len):
             n = valid_stock_list[i]
+            id = y_ID_valid[i]
             y_pred_case = y_pred[i]
             y_true_case = y_true[i]
             ## share prices are rising in y_true, also y_pred
             if (y_true_case) >= 0 and (y_pred_case) >= 0:
                 stock_pred_correctness[n] = 1 # TP
-                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+                print ('stock index',n,'stock id',id,'prediction', y_pred[i],'true', y_true[i])
             ## share prices are rising in y_pred, but falling in y_true
             if (y_true_case) < 0 and (y_pred_case) >= 0:
                 stock_pred_correctness[n] = 2 # TF
-                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+                print ('stock index',n,'stock id',id,'prediction', y_pred[i],'true', y_true[i])
             ## share prices are falling in y_true, also y_pred
             if (y_true_case) < 0 and (y_pred_case) < 0:
                 stock_pred_correctness[n] = 3 # TN
-                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+                print ('stock index',n,'stock id',id,'prediction', y_pred[i],'true', y_true[i])
             ## share prices are rising in y_true, but falling in y_pred
             if (y_true_case) >= 0 and (y_pred_case) < 0:
                 stock_pred_correctness[n] = 4 # FN
-                print ('stock index',n,'prediction', y_pred[i],'true', y_true[i])
+                print ('stock index',n,'stock id',id,'prediction', y_pred[i],'true', y_true[i])
         return stock_pred_correctness
 
     ## Linear regression
     def run(self):
         ## get train/test data
-        x_train, x_test, y_train, y_test = self.data_preprocess()
+        x_train, x_test, y_train, y_test, test_ID_df = self.data_preprocess()
         print("x_train.shape:{},\n x_test.shape:{},\n y_train.shape:{},\n y_test.shape:{},\n".format(x_train.shape, x_test.shape, y_train.shape, y_test.shape))
         # assert(0)
         cur_stock_price_train = y_train['0_label']
         cur_stock_price_test = y_test['0_label']
         y_train = y_train[self.predict_month_id]
         y_test = y_test[self.predict_month_id]
+        y_testID = test_ID_df['id']
 
         ## model training
         self.model.fit(x_train, y_train)
@@ -271,11 +273,11 @@ class Regress():
             f.close()
 
         drop_ponit = 0.15
-        valid_stock_list, y_pred_valid, y_true_valid = self.drop_small_change_stock(y_pred, y_test, drop_ponit)
+        valid_stock_list, y_pred_valid, y_true_valid, y_testID_valid = self.drop_small_change_stock(y_pred, y_test, drop_ponit, y_testID)
         full_stock_list = y_test.shape[0]
         # TP, FP, TN, FN = self.perf_measure(y_pred, y_test, cur_stock_price_test)
         TP, FP, TN, FN = self.perf_measure(y_pred_valid, y_true_valid, cur_stock_price_test)
-        stock_pred_correctness = self.perf_measure_per_stock(full_stock_list,valid_stock_list,y_pred_valid,y_true_valid)
+        stock_pred_correctness = self.perf_measure_per_stock(full_stock_list,valid_stock_list,y_pred_valid,y_true_valid,y_testID_valid)
         with open(self.save_path + 'stock_pred_correctness.csv', 'a', newline='') as f_object: 
             writer_object = writer(f_object)
             writer_object.writerow(stock_pred_correctness)
@@ -287,8 +289,8 @@ class Regress():
 if __name__ == '__main__':
     ## base parameter
     for predict_month_id in [1,2,3]:
-        dataflag='regress_data_new_2'
-        saveflag='regress_result_new_2'
+        dataflag='regress_data_new_4'
+        saveflag='regress_result_new_4'
         predict_n_month=3
         all_indicator_use=True
         predict_label_type='predict_pricechange' # 'predict_pricechange' or 'predict_price'
