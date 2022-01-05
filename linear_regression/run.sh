@@ -1,3 +1,5 @@
+#! /bin/bash
+
 python regress.py \
 --save_path=regress_result/past_quater_4-drop_small_change_stock_fortrain/ \
 --train_drop_ponit=0.15 \

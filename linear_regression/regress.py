@@ -3,7 +3,7 @@ import numpy as np
 
 from sklearn import linear_model
 import os
-from csv import writer
+import csv
 from data_preprocess import DataPreprocess
 import argparse
 from result_analysis import drop_small_change_stock_fntrain, drop_small_change_stock_fntest, perf_measure, perf_measure_per_stock
@@ -44,7 +44,7 @@ def get_args():
         default=3,
         help="N month to predict.")
     parser.add_argument(
-        "--predict_mode", 
+        "--predict_mode",
         default="predict_changerate_price",
         help="Using 'predict_changerate_price' is currently the best approach.",
         choices=['predict_changerate_price', 'predict_absvalue_price'])
@@ -88,7 +88,8 @@ class Regress():
     def run(self, data_path, train_date_list, test_date_list, n_month_predict):
         # 1.数据预处理
         x_train_, x_test_, y_train_, y_test_, train_ID_df, test_ID_df = DataPreprocess(
-            data_path, train_date_list, test_date_list, n_month_predict, self.i_month_label, self.indicator_list).run()
+            data_path, train_date_list, test_date_list, n_month_predict,
+            self.i_month_label, self.indicator_list).run()
 
         # 2.获取训练集的label、测试集的label、测试集的label对应的股票ID
         ## 训练集重映射
@@ -130,15 +131,29 @@ class Regress():
             valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                 y_pred=y_pred, y_true=y_test, drop_ponit=self.test_drop_ponit, test_stock_id=y_testID)
             full_stock_list = y_test.shape[0]
-            
+
             TP, FP, TN, FN = perf_measure(
                 y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
             stock_pred_correctness = perf_measure_per_stock(
                 full_stock_list, valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid)
-            with open(self.save_path_permonth + 'stock_pred_correctness.csv', 'a', newline='') as f_object:
-                writer_object = writer(f_object)
-                writer_object.writerow(stock_pred_correctness)
-                f_object.close()
+
+            stock_pred_correctness_df = pd.DataFrame(stock_pred_correctness)
+            stock_pred_correctness_df.to_csv(
+                os.path.join(self.save_path_permonth, 'stock_pred_correctness.tsv'),
+                sep='\t',
+                quoting=csv.QUOTE_NONE,
+                index=False)
+
+            stock_is_SH = stock_pred_correctness_df['id'].str.endswith('SH')
+            stock_pred_topN_df = stock_pred_correctness_df[stock_is_SH].sort_values('pred', ascending=False)[:10]
+            stock_pred_topN_df.to_csv(
+                os.path.join(self.save_path_permonth, 'stock_pred_topN.tsv'),
+                sep='\t',
+                quoting=csv.QUOTE_NONE,
+                index=False)
+
+            print(stock_pred_topN_df.describe())
+
             print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
         else:
             assert(0)
@@ -192,6 +207,6 @@ if __name__ == '__main__':
 
         r = Regress(regress_model, save_path_permonth,
                     i_month_label, indicator_list,
-                    drop_small_change_stock_fortrain, drop_small_change_stock_fortest, 
+                    drop_small_change_stock_fortrain, drop_small_change_stock_fortest,
                     train_drop_ponit, test_drop_ponit)
         r.run(data_path, train_date_list, test_date_list, n_month_predict)

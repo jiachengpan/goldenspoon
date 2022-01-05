@@ -116,32 +116,40 @@ def drop_small_change_stock_fntest(y_pred, y_true, drop_ponit, test_stock_id):
 
 
 def perf_measure_per_stock(full_stock_list, valid_stock_list, y_pred, y_true, y_ID_valid):
-    stock_pred_correctness = np.zeros(full_stock_list)
+    stock_pred_correctness = []
     valid_stock_list_len = valid_stock_list.shape[0]
+
     #print ((valid_stock_list.shape))
     for i in range(valid_stock_list_len):
         n = valid_stock_list[i]
         id = y_ID_valid[i]
         y_pred_case = y_pred[i]
         y_true_case = y_true[i]
+
+        stock_pred_correctness.append(dict(
+            index = n[0],
+            id    = id[0],
+            pred  = y_pred[i][0],
+            true  = y_true[i][0]))
+
         # share prices are rising in y_true, also y_pred
         if (y_true_case) >= 0 and (y_pred_case) >= 0:
-            stock_pred_correctness[n] = 1  # TP
-            print('stock index', n, 'stock id', id,
-                  'prediction', y_pred[i], 'true', y_true[i])
+            stock_pred_correctness[-1]['type'] = 'TP'
+            # print('stock index', n, 'stock id', id,
+            #       'prediction', y_pred[i], 'true', y_true[i])
         # share prices are rising in y_pred, but falling in y_true
         if (y_true_case) < 0 and (y_pred_case) >= 0:
-            stock_pred_correctness[n] = 2  # TF
-            print('stock index', n, 'stock id', id,
-                  'prediction', y_pred[i], 'true', y_true[i])
+            stock_pred_correctness[-1]['type'] = 'FP'
+            #  print('stock index', n, 'stock id', id,
+            #        'prediction', y_pred[i], 'true', y_true[i])
         # share prices are falling in y_true, also y_pred
         if (y_true_case) < 0 and (y_pred_case) < 0:
-            stock_pred_correctness[n] = 3  # TN
-            print('stock index', n, 'stock id', id,
-                  'prediction', y_pred[i], 'true', y_true[i])
+            stock_pred_correctness[-1]['type'] = 'TN'
+            #  print('stock index', n, 'stock id', id,
+            #        'prediction', y_pred[i], 'true', y_true[i])
         # share prices are rising in y_true, but falling in y_pred
         if (y_true_case) >= 0 and (y_pred_case) < 0:
-            stock_pred_correctness[n] = 4  # FN
-            print('stock index', n, 'stock id', id,
-                  'prediction', y_pred[i], 'true', y_true[i])
+            stock_pred_correctness[-1]['type'] = 'FN'
+            #  print('stock index', n, 'stock id', id,
+            #        'prediction', y_pred[i], 'true', y_true[i])
     return stock_pred_correctness

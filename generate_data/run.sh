@@ -21,7 +21,7 @@ dates="
 #        "
 
 past_quater_number='4'
-regress_dir='../linear_regress/regress_data/past_quater_'${past_quater_number}'/'
+regress_dir='../linear_regression/regress_data/past_quater_'${past_quater_number}'/'
 for end_date in $dates; do
   python main.py $end_date ${regress_dir} ${past_quater_number}&
 done
