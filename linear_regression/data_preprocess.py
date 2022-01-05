@@ -61,6 +61,7 @@ class DataPreprocess():
     def run(self):
         totaldate_X_df = pd.DataFrame()
         totaldate_Y_df = pd.DataFrame()
+        totaldate_ID_df = pd.DataFrame()
         for date in self.train_date_list:
             print("train date:", date)
             indicator_pickle = self.data_path + 'indicators.' + date + '.pickle'
@@ -74,13 +75,14 @@ class DataPreprocess():
                     label_pickle_list.append(label_pickle)
                 df_indicator_label = self.merge_indicator_label(
                     df_indicator, label_pickle_list)
-                X_df, Y_df, train_ID_df = self.get_train_indicator_label(
+                X_df, Y_df, train_ID_df_ = self.get_train_indicator_label(
                     df_indicator_label)
                 totaldate_X_df = pd.concat([totaldate_X_df, X_df], axis=0)
                 totaldate_Y_df = pd.concat([totaldate_Y_df, Y_df], axis=0)
+                totaldate_ID_df = pd.concat([totaldate_ID_df, train_ID_df_], axis=0)
             else:
                 print("{} is a empty dataframe!".format(indicator_pickle))
-        x_train, y_train = totaldate_X_df, totaldate_Y_df
+        x_train, y_train, train_ID_df = totaldate_X_df, totaldate_Y_df, totaldate_ID_df
         # x_train, x_test, y_train, y_test = train_test_split(totaldate_X_df, totaldate_Y_df, random_state=1)
 
         for date in self.test_date_list:
@@ -100,5 +102,5 @@ class DataPreprocess():
                     df_indicator_label)
             else:
                 print("{} is a empty dataframe!".format(indicator_pickle))
-        x_test, y_test = X_df, Y_df
-        return x_train, x_test, y_train, y_test, test_ID_df
+        x_test, y_test, test_ID_df = X_df, Y_df, test_ID_df
+        return x_train, x_test, y_train, y_test, train_ID_df, test_ID_df

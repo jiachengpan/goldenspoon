@@ -88,18 +88,29 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, save_path_
 
 # 4. drop stocks with small changes
 
+def drop_small_change_stock_fntrain(y_train, x_train, drop_ponit, train_stock_id):
 
-def drop_small_change_stock(y_pred, y_true, drop_ponit, y_stock_id):
+    valid_stock_list = np.where(np.absolute(y_train) > drop_ponit)
+    valid_stock_list = np.asarray(valid_stock_list)
+    valid_stock_list = valid_stock_list.transpose()
+    valid_stock_list = np.array(valid_stock_list).flatten()
+    y_train_valid = y_train.loc[valid_stock_list]
+    x_train_valid = x_train.loc[valid_stock_list]
+    train_stock_id_valid = train_stock_id.loc[valid_stock_list]
+    return valid_stock_list, y_train_valid, x_train_valid, train_stock_id_valid
+
+
+def drop_small_change_stock_fntest(y_pred, y_true, drop_ponit, test_stock_id):
     y_pred = np.array(y_pred).flatten()
     y_true = np.array(y_true).flatten()
-    y_stock_id = np.array(y_stock_id).flatten()
+    test_stock_id = np.array(test_stock_id).flatten()
     valid_stock_list = np.where(np.absolute(y_pred) > drop_ponit)
     valid_stock_list = np.asarray(valid_stock_list)
     valid_stock_list = valid_stock_list.transpose()
     y_pred_valid = y_pred[valid_stock_list]
     y_true_valid = y_true[valid_stock_list]
-    y_stock_id_valid = y_stock_id[valid_stock_list]
-    return valid_stock_list, y_pred_valid, y_true_valid, y_stock_id_valid
+    test_stock_id_valid = test_stock_id[valid_stock_list]
+    return valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid
 
 # 5. assess the prediction correcness of each stock
 
