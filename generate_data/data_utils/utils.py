@@ -1,6 +1,7 @@
 import os
 import pickle
 
+
 def pickle_cache(filename, callback):
     if os.path.isfile(filename):
         with open(filename, 'rb') as fh:

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 
+
 class GenericIndexBase:
     def __init__(self):
         self.result = defaultdict(dict)
@@ -15,7 +16,8 @@ class GenericIndexBase:
                 rows.append(v)
             elif isinstance(v, (tuple, list)):
                 for vv in v:
-                    if not v: continue
+                    if not v:
+                        continue
                     for key_name, key_value in zip(self.key_names, k):
                         vv[key_name] = key_value
                     rows.append(vv)
@@ -27,6 +29,8 @@ class GenericIndexBase:
         return pd.DataFrame(rows)
 
 # generic indexer for columns without special metadata
+
+
 class GenericNameIndex(GenericIndexBase):
     name = 'generic'
     key_names = ['证券代码', '证券名称']
@@ -45,6 +49,8 @@ class GenericNameIndex(GenericIndexBase):
         return True
 
 # generic indexer for columns with date
+
+
 class GenericDateIndex(GenericIndexBase):
     name = 'date'
     key_names = ['证券代码', '日期']
@@ -64,11 +70,13 @@ class GenericDateIndex(GenericIndexBase):
 
         if name in indexed[key] and not np.isclose(indexed[key][name], row[col]):
             print('WARN: column "{}" value already assigned: key: {}, value: {} vs {}'.format(
-                name , key, indexed[key][name], row[col]))
+                name, key, indexed[key][name], row[col]))
         indexed[key][name] = row[col]
         return True
 
 # indexer for funds topN stock holding stats
+
+
 class TopNStocksIndex(GenericIndexBase):
     name = 'topn_stocks'
     key_names = ['基金代码', '日期']
@@ -113,8 +121,7 @@ class TopNStocksIndex(GenericIndexBase):
                         '股票名称': data['股票名称'],
                         'indicator': indicator,
                         'value': value,
-                        })
+                    })
             result[k] = indicators
         self.result = result
         return super().get_indexed_data()
-

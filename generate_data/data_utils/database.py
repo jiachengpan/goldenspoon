@@ -12,11 +12,11 @@ class Database:
     k_key_columns = (
         '证券代码',
         '证券名称',
-        )
+    )
 
     def __init__(self, path):
         self.k_cached = os.path.join(os.getcwd(), 'cached')
-        self.k_path   = path
+        self.k_path = path
         self.raw_data = {}
         os.makedirs(self.k_cached, exist_ok=True)
 
@@ -49,18 +49,18 @@ class Database:
     @staticmethod
     def compute_column_metadata(col):
         re_report_timestamp = re.compile('.报告期.(\d{4})年(.*)')
-        re_trans_timestamp  = re.compile('.*日期..*(\d{4})-(\d{2})-(\d{2})')
-        re_topn_name        = re.compile('.名次.*第(\d+)名')
-        re_meta_name        = re.compile('\[([^]]+)\](\S+)')
+        re_trans_timestamp = re.compile('.*日期..*(\d{4})-(\d{2})-(\d{2})')
+        re_topn_name = re.compile('.名次.*第(\d+)名')
+        re_meta_name = re.compile('\[([^]]+)\](\S+)')
 
         k_report_mapping = {
-                '一季':         (3, 31),
-                '二季/中报':     (6, 30),
-                '三季':         (9, 30),
-                '年报':         (12, 31),
-                }
+            '一季':         (3, 31),
+            '二季/中报':     (6, 30),
+            '三季':         (9, 30),
+            '年报':         (12, 31),
+        }
 
-        tokens   = []
+        tokens = []
         metadata = {}
         for tok in col.split():
             m = re_report_timestamp.match(tok)
@@ -75,7 +75,8 @@ class Database:
             if m:
                 assert 'date' not in metadata
                 year, month, day = m.groups()
-                metadata['date'] = datetime.date(int(year), int(month), int(day))
+                metadata['date'] = datetime.date(
+                    int(year), int(month), int(day))
                 continue
 
             m = re_topn_name.match(tok)
@@ -109,16 +110,16 @@ class Database:
 
     def index_data(self):
         self.fund_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_fund_stats.pkl'),
-                lambda : self.index_by_column_metadata('funds'))
+                                             lambda: self.index_by_column_metadata('funds'))
         self.stock_stats = utils.pickle_cache(os.path.join(self.k_cached, 'indexed_stock_stats.pkl'),
-                lambda : self.index_by_column_metadata('stocks'))
+                                              lambda: self.index_by_column_metadata('stocks'))
 
         self.index_basic_info()
 
         for df in self.fund_stats.values():
-            df.rename(columns = {'证券代码': '基金代码', '证券名称': '基金名称'}, inplace=True)
+            df.rename(columns={'证券代码': '基金代码', '证券名称': '基金名称'}, inplace=True)
         for df in self.stock_stats.values():
-            df.rename(columns = {'证券代码': '股票代码', '证券名称': '股票名称'}, inplace=True)
+            df.rename(columns={'证券代码': '股票代码', '证券名称': '股票名称'}, inplace=True)
 
     def index_by_column_metadata(self, prefix):
         self.load_files()
@@ -139,9 +140,9 @@ class Database:
             if data is None:
                 continue
 
-            cols =  list(self.k_key_columns)
+            cols = list(self.k_key_columns)
             cols += list(sorted(set(data.columns.tolist()) - set(cols)))
-            cols =  [col for col in cols if col in data.columns]
+            cols = [col for col in cols if col in data.columns]
 
             result[indexer.name] = data[cols]
 
@@ -178,4 +179,3 @@ class Database:
         stock_basics = self.get_stocks()[key_columns]
         self.stock_map = dict(stock_basics.values.tolist())
         self.stock_map_reverse = {v: k for k, v in self.stock_map.items()}
-
