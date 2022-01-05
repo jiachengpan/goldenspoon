@@ -1,0 +1,1 @@
+python regress.py >& regress_result/result.log
