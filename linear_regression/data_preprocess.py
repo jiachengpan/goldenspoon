@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 class DataPreprocess():
     def __init__(self, data_path, train_date_list, test_date_list, n_month_predict, i_month_label, indicator_list):
         self.data_path = data_path
@@ -84,6 +83,11 @@ class DataPreprocess():
                 print("{} is a empty dataframe!".format(indicator_pickle))
         x_train, y_train, train_ID_df = totaldate_X_df, totaldate_Y_df, totaldate_ID_df
         # x_train, x_test, y_train, y_test = train_test_split(totaldate_X_df, totaldate_Y_df, random_state=1)
+        if len(self.train_date_list) > 1:
+            x_train = x_train.reset_index(drop=True)
+            y_train = y_train.reset_index(drop=True)
+            train_ID_df = train_ID_df.reset_index(drop=True)
+
 
         for date in self.test_date_list:
             print("test date:", date)

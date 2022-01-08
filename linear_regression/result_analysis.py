@@ -119,7 +119,7 @@ def perf_measure_per_stock(full_stock_list, valid_stock_list, y_pred, y_true, y_
     stock_pred_correctness = []
     valid_stock_list_len = valid_stock_list.shape[0]
 
-    #print ((valid_stock_list.shape))
+    # print((valid_stock_list.shape))
     for i in range(valid_stock_list_len):
         n = valid_stock_list[i]
         id = y_ID_valid[i]
@@ -135,21 +135,21 @@ def perf_measure_per_stock(full_stock_list, valid_stock_list, y_pred, y_true, y_
         # share prices are rising in y_true, also y_pred
         if (y_true_case) >= 0 and (y_pred_case) >= 0:
             stock_pred_correctness[-1]['type'] = 'TP'
-            # print('stock index', n, 'stock id', id,
-            #       'prediction', y_pred[i], 'true', y_true[i])
+            print('stock index', n, 'stock id', id,
+                  'prediction', y_pred[i], 'truevalue', y_true[i])
         # share prices are rising in y_pred, but falling in y_true
         if (y_true_case) < 0 and (y_pred_case) >= 0:
             stock_pred_correctness[-1]['type'] = 'FP'
-            #  print('stock index', n, 'stock id', id,
-            #        'prediction', y_pred[i], 'true', y_true[i])
+            print('stock index', n, 'stock id', id,
+                'prediction', y_pred[i], 'truevalue', y_true[i])
         # share prices are falling in y_true, also y_pred
         if (y_true_case) < 0 and (y_pred_case) < 0:
             stock_pred_correctness[-1]['type'] = 'TN'
-            #  print('stock index', n, 'stock id', id,
-            #        'prediction', y_pred[i], 'true', y_true[i])
+            print('stock index', n, 'stock id', id,
+                'prediction', y_pred[i], 'truevalue', y_true[i])
         # share prices are rising in y_true, but falling in y_pred
         if (y_true_case) >= 0 and (y_pred_case) < 0:
             stock_pred_correctness[-1]['type'] = 'FN'
-            #  print('stock index', n, 'stock id', id,
-            #        'prediction', y_pred[i], 'true', y_true[i])
+            print('stock index', n, 'stock id', id,
+                'prediction', y_pred[i], 'truevalue', y_true[i])
     return stock_pred_correctness

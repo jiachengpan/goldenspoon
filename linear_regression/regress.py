@@ -93,7 +93,7 @@ class Regress():
 
         # 2.获取训练集的label、测试集的label、测试集的label对应的股票ID
         ## 训练集重映射
-        if self.drop_small_change_stock_fortrain:
+        if self.drop_small_change_stock_fortrain or (self.train_drop_ponit==0.0):
             ## 需要按照y_train大于drop_ponit做判断, 保留x_train和y_train中涨跌幅绝对值大于drop_ponit的数据
             y_train_ = y_train_[self.i_month_label]
             y_trainID_ = train_ID_df['id']
@@ -165,6 +165,9 @@ class Regress():
 if __name__ == '__main__':
     # base parameter
     args = get_args()
+    for arg in vars(args):
+        print(format(arg, '<40'), format(" -----> " + str(getattr(args, arg)), '<'))
+    print('\n')
     data_path = args.data_path
     save_path = args.save_path
 
