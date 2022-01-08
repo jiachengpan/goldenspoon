@@ -1,0 +1,8 @@
+ONNX Utilities
+=======================
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   batchsize

@@ -6,7 +6,6 @@
     - [Linear Regression](#linear-regression)
 
 ## Introduction
-[web introduction](http://172.16.15.11:8193)
 ## Usage
 ### Generate Data  
 1. cd ./generate_data folder.  

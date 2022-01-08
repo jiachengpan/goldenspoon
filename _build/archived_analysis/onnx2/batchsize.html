@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="EN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TopsIDEAS onnx batchsize &mdash; GoldenSpoon 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/web.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GoldenSpoon
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">GoldenSpoon</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GoldenSpoon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>TopsIDEAS onnx batchsize</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/archived_analysis/onnx2/batchsize.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="topsideas-onnx-batchsize">
+<h1>TopsIDEAS onnx batchsize<a class="headerlink" href="#topsideas-onnx-batchsize" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="#description">Description</a></p></li>
+<li><p><a class="reference external" href="#cli">CLI</a></p>
+<ul>
+<li><p><a class="reference external" href="#usage">Usage</a></p></li>
+<li><p><a class="reference external" href="#arguments">Arguments</a></p></li>
+<li><p><a class="reference external" href="#example">Example</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="#api">API</a></p>
+<ul>
+<li><p><a class="reference external" href="#usage-1">Usage</a></p></li>
+<li><p><a class="reference external" href="#arguments-1">Arguments</a></p></li>
+</ul>
+</li>
+</ul>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline"></a></h2>
+<p>转化onnx模型的batchsize</p>
+<ol class="arabic simple">
+<li><p>对于 <strong>dynamic batchsize</strong> 转换为 <strong>static batchsize</strong> 的情况，可以配合 <span class="xref myst">fold_constant</span> 工具去除多余的形状计算op，但是fold后不支持再次转换batchsize</p></li>
+<li><p>对于 <strong>static batchsize</strong> 转换为 <strong>dynamic batchsize</strong> 的情况，目前不支持自动增加形状计算op，只支持转换较为简单的模型</p></li>
+</ol>
+</section>
+<section id="cli">
+<h2>CLI<a class="headerlink" href="#cli" title="Permalink to this headline"></a></h2>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usage: topsideas onnx batchsize <span class="o">[</span>-h<span class="o">]</span> --input_onnx INPUT_ONNX
+                                <span class="o">[</span>--output_onnx OUTPUT_ONNX<span class="o">]</span>
+                                <span class="o">[</span>--batch_size BATCH_SIZE<span class="o">]</span>
+                                <span class="o">[</span>--input_names INPUT_NAMES <span class="o">[</span>INPUT_NAMES ...<span class="o">]]</span>
+                                <span class="o">[</span>--output_names OUTPUT_NAMES <span class="o">[</span>OUTPUT_NAMES ...<span class="o">]]</span>
+</pre></div>
+</div>
+</section>
+<section id="arguments">
+<h3>Arguments<a class="headerlink" href="#arguments" title="Permalink to this headline"></a></h3>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-left head"><p>short</p></th>
+<th class="text-left head"><p>long</p></th>
+<th class="text-left head"><p>default</p></th>
+<th class="text-left head"><p>help</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
+<td class="text-left"><p></p></td>
+<td class="text-left"><p>show this help message and exit</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--input_onnx</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td class="text-left"><p>Provide original onnx file.</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--output_onnx</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td class="text-left"><p>Export the modified onnx file.</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--batch_size</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td class="text-left"><p>Specify the batchsize, set -1 to convert to dynamic batch size.</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--input_names</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td class="text-left"><p>Model inputs that need to modify. If not set, all inputs will be modified.</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--output_names</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td class="text-left"><p>Model outputs that need to modify. If not set, all outputs will be modified.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h3>
+<p>转换成 <strong>dynamic batchsize</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>topsideas onnx batchsize --batch_size<span class="o">=</span>-1 --input_onnx<span class="o">=</span>demo.onnx --input_names<span class="o">=</span>input:0 --output_onnx<span class="o">=</span>demo_dynamic_bs.onnx  
+</pre></div>
+</div>
+<p>转换成 <strong>static batchsize</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>topsideas onnx batchsize --batch_size<span class="o">=</span><span class="m">2</span> --input_onnx<span class="o">=</span>demo.onnx --input_names<span class="o">=</span>input:0 --output_onnx<span class="o">=</span>demo_bs2.onnx  
+</pre></div>
+</div>
+<p><img alt="batchsize" src="../../_images/batchsize_11.png" /></p>
+</section>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline"></a></h2>
+<section id="id1">
+<h3>Usage<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">topsideas.onnx</span> <span class="kn">import</span> <span class="n">Batchsize</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">Batchsize</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_mp</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Arguments<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-left head"><p>argument</p></th>
+<th class="text-left head"><p>type</p></th>
+<th class="text-left head"><p>default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>input_mp</p></td>
+<td class="text-left"><p>onnx.onnx_ml_pb2.ModelProto</p></td>
+<td class="text-left"><p></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>batch_size</p></td>
+<td class="text-left"><p>int</p></td>
+<td class="text-left"><p>1</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>input_names</p></td>
+<td class="text-left"><p>List[str]</p></td>
+<td class="text-left"><p>[]</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>output_names</p></td>
+<td class="text-left"><p>List[str]</p></td>
+<td class="text-left"><p>[]</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>RETURN</p></td>
+<td class="text-left"><p>onnx.onnx_ml_pb2.ModelProto</p></td>
+<td class="text-left"><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, xiaoying.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

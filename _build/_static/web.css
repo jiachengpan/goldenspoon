@@ -1,0 +1,21 @@
+@import url("css/theme.css");
+.wy-nav-content {
+    max-width: 1000px !important;
+}
+.rst-content ul.simple{
+    list-style: disc;
+    padding: 0 0 0 40px;
+}
+.rst-content ul.simple li{
+    list-style: disc;
+}
+.rst-content ul.simple ul{
+    list-style: circle;
+    padding: 0 0 0 40px;
+}
+.rst-content ul.simple li li{
+    list-style: circle;
+}
+.rst-content ul.simple li p{
+    margin: 0;
+}

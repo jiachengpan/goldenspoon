@@ -1,0 +1,36 @@
+
+# TopsIDEAS onnx batchsize
+- [Description](#description)
+- [CLI](#cli)
+    - [Usage](#usage)
+    - [Arguments](#arguments)
+    - [Example](#example)
+- [API](#api)
+    - [Usage](#usage-1)
+    - [Arguments](#arguments-1)
+
+## Description
+
+转化onnx模型的batchsize  
+1. 对于 **dynamic batchsize** 转换为 **static batchsize** 的情况，可以配合 [fold_constant](./fold_constant.md) 工具去除多余的形状计算op，但是fold后不支持再次转换batchsize  
+2. 对于 **static batchsize** 转换为 **dynamic batchsize** 的情况，目前不支持自动增加形状计算op，只支持转换较为简单的模型  
+
+## CLI
+
+### Usage
+
+
+```bash
+usage: topsideas onnx batchsize [-h] --input_onnx INPUT_ONNX
+                                [--output_onnx OUTPUT_ONNX]
+                                [--batch_size BATCH_SIZE]
+                                [--input_names INPUT_NAMES [INPUT_NAMES ...]]
+                                [--output_names OUTPUT_NAMES [OUTPUT_NAMES ...]]
+
+
+
+
+
+
+![Image Title](./imgs/Data_Structure.pdf){width=65%}
+![Image Title](./imgs/batchsize_1.png){width=65%}

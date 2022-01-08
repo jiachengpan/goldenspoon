@@ -1,0 +1,12 @@
+GoldenSpoon Archived Analysis
+=======================
+
+.. toctree::
+   :maxdepth: 2
+   :glob:
+
+   README
+
+| If you have problems using this software, please contact the authors:
+| xin.guo@enflame-tech.com
+| xiaoying.zhang@enflame-tech.com
