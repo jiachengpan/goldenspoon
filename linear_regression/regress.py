@@ -26,6 +26,11 @@ def get_args():
         nargs="+",
         help="Set the indicators you want to train.",
         default=[])
+    parser.add_argument(
+        "--indicator_use_type",
+        help="Set the type of indicators you want to train.",
+        default='None',
+        choices=['None', 'industrial_static', 'industrial_dynamic', 'stock_dynamic', 'static_stock_dynamic','all_dynamic'])
 
     parser.add_argument(
         "--train_date_list",
@@ -150,15 +155,18 @@ class Regress():
                 quoting=csv.QUOTE_NONE,
                 index=False)
 
-            stock_is_SH = stock_pred_correctness_df['id'].str.endswith('SH')
-            stock_pred_topN_df = stock_pred_correctness_df[stock_is_SH].sort_values('pred', ascending=False)[:10]
-            stock_pred_topN_df.to_csv(
-                os.path.join(self.save_path_permonth, 'stock_pred_topN.tsv'),
-                sep='\t',
-                quoting=csv.QUOTE_NONE,
-                index=False)
 
-            print(stock_pred_topN_df.describe())
+            if not stock_pred_correctness_df.empty:
+                stock_is_SH = stock_pred_correctness_df['id'].str.endswith('SH')
+                stock_pred_topN_df = stock_pred_correctness_df[stock_is_SH].sort_values('pred', ascending=False)[:10]
+                stock_pred_topN_df.to_csv(
+                    os.path.join(self.save_path_permonth, 'stock_pred_topN.tsv'),
+                    sep='\t',
+                    quoting=csv.QUOTE_NONE,
+                    index=False)
+                print(stock_pred_topN_df.describe())
+            else:
+                print("stock_pred_correctness_df is a empty dataframe.")
 
             print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
         else:
@@ -179,6 +187,7 @@ if __name__ == '__main__':
 
     n_month_predict = args.n_month_predict
     indicator_use_list = args.indicator_use_list
+    indicator_use_type = args.indicator_use_type
 
     train_date_list = args.train_date_list
     test_date_list = args.test_date_list
@@ -197,17 +206,43 @@ if __name__ == '__main__':
     else:
         assert("The training model was not implemented.")
 
-    # 如果没有指定使用的indicator列表，则使用全部的indicator训练
-    if indicator_use_list == []:
-        indicator_pickle = args.data_path + \
-            'indicators.' + train_date_list[0] + '.pickle'
-        df_indicator = pd.read_pickle(indicator_pickle)
-        all_indicator_list = list(df_indicator.columns.values)[
-            1:]  # exclude 'id'
-        indicator_list = all_indicator_list
-        print("-----indicator_list:{}\n".format(indicator_list))
+    if indicator_use_type == 'None':
+        # 如果没有指定type,同时没有使用的indicator列表，则使用全部的indicator训练
+        if indicator_use_list == []:
+            indicator_pickle = args.data_path + \
+                'indicators.' + train_date_list[0] + '.pickle'
+            df_indicator = pd.read_pickle(indicator_pickle)
+            all_indicator_list = list(df_indicator.columns.values)[
+                1:]  # exclude 'id'
+            indicator_list = all_indicator_list
+            print("-----indicator_list:{}\n".format(indicator_list))
+            assert(0)
+        else:
+            indicator_list = indicator_use_list
+    elif indicator_use_type == 'industrial_static':
+        indicator_list = ['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股']
+    elif indicator_use_type == 'industrial_dynamic':
+        indicator_list = ['market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std']
+    elif indicator_use_type == 'stock_dynamic':
+        indicator_list = ['close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', \
+                        'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std',\
+                        'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean',\
+                        'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+    elif indicator_use_type == 'static_stock_dynamic':
+        indicator_list = ['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', \
+                        'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', \
+                        'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std',\
+                        'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean',\
+                        'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+    elif indicator_use_type == 'all_dynamic':
+        indicator_list = ['market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', \
+                        'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', \
+                        'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std',\
+                        'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean',\
+                        'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
     else:
-        indicator_list = indicator_use_list
+        assert("Wrong indicator list!")
+
 
     for i in range(n_month_predict):
         i_month_predict = i+1

@@ -1,0 +1,130 @@
+data_path                                 -----> regress_data/past_quater_4/
+save_path                                 -----> regress_result/XY_ridge_industrial_static_4_Sample_Drop_0.1/
+indicator_use_list                        -----> []
+indicator_use_type                        -----> industrial_static
+train_date_list                           -----> ['2020-09-30', '2020-12-31', '2021-03-31', '2021-06-30']
+test_date_list                            -----> ['2021-09-30']
+n_month_predict                           -----> 3
+predict_mode                              -----> predict_changerate_price
+drop_small_change_stock_fortrain          -----> True
+train_drop_ponit                          -----> 0.1
+drop_small_change_stock_fortest           -----> True
+test_drop_ponit                           -----> 0.15
+training_model                            -----> ridge
+
+
+-----i_month_predict:1
+
+-----i_month_label:1_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(833, 7)
+
+-----x_test.shape:(841, 7)
+
+-----y_train.shape:(833,)
+
+-----y_test.shape:(841,)
+
+stock_pred_correctness_df is a empty dataframe.
+TP:0, FP:0, TN:0, FN:0
+-----i_month_predict:2
+
+-----i_month_label:2_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(894, 7)
+
+-----x_test.shape:(841, 7)
+
+-----y_train.shape:(894,)
+
+-----y_test.shape:(841,)
+
+stock index [108] stock id ['600971.SH'] prediction [0.18716737] truevalue [-0.23687424]
+stock index [183] stock id ['600123.SH'] prediction [0.18716737] truevalue [-0.27959502]
+stock index [208] stock id ['603113.SH'] prediction [0.18716737] truevalue [-0.10330579]
+stock index [264] stock id ['600339.SH'] prediction [0.18716737] truevalue [-0.13580247]
+stock index [315] stock id ['002221.SZ'] prediction [0.18716737] truevalue [-0.07127112]
+stock index [337] stock id ['600583.SH'] prediction [0.18716737] truevalue [-0.10020877]
+stock index [349] stock id ['601666.SH'] prediction [0.18716737] truevalue [-0.39184953]
+stock index [396] stock id ['002128.SZ'] prediction [0.18716737] truevalue [-0.23699803]
+stock index [403] stock id ['002353.SZ'] prediction [0.18716737] truevalue [-0.19392813]
+stock index [501] stock id ['600348.SH'] prediction [0.18716737] truevalue [-0.12795436]
+stock index [582] stock id ['601808.SH'] prediction [0.18716737] truevalue [-0.15838509]
+stock index [598] stock id ['601699.SH'] prediction [0.18716737] truevalue [-0.28047968]
+stock index [607] stock id ['600256.SH'] prediction [0.18716737] truevalue [-0.31451613]
+stock index [619] stock id ['000983.SZ'] prediction [0.18716737] truevalue [-0.32715008]
+stock index [623] stock id ['000723.SZ'] prediction [0.18716737] truevalue [0.25348189]
+stock index [691] stock id ['601898.SH'] prediction [0.18716737] truevalue [-0.32926829]
+stock index [694] stock id ['600188.SH'] prediction [0.18716737] truevalue [-0.21628148]
+stock index [764] stock id ['601225.SH'] prediction [0.18716737] truevalue [-0.1972973]
+stock index [821] stock id ['601088.SH'] prediction [0.18716737] truevalue [-0.13768756]
+stock index [827] stock id ['600028.SH'] prediction [0.18716737] truevalue [-0.0941704]
+stock index [836] stock id ['601857.SH'] prediction [0.18716737] truevalue [-0.21630616]
+           index       pred       true
+count   10.00000  10.000000  10.000000
+mean   373.70000   0.187167  -0.212897
+std    186.41176   0.000000   0.101533
+min    108.00000   0.187167  -0.391850
+25%    222.00000   0.187167  -0.280259
+50%    343.00000   0.187167  -0.197630
+75%    561.75000   0.187167  -0.129916
+max    607.00000   0.187167  -0.100209
+TP:1, FP:20, TN:0, FN:0
+-----i_month_predict:3
+
+-----i_month_label:3_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(1012, 7)
+
+-----x_test.shape:(841, 7)
+
+-----y_train.shape:(1012,)
+
+-----y_test.shape:(841,)
+
+stock index [108] stock id ['600971.SH'] prediction [0.2103084] truevalue [-0.23687424]
+stock index [183] stock id ['600123.SH'] prediction [0.2103084] truevalue [-0.27959502]
+stock index [208] stock id ['603113.SH'] prediction [0.2103084] truevalue [-0.10330579]
+stock index [264] stock id ['600339.SH'] prediction [0.2103084] truevalue [-0.13580247]
+stock index [315] stock id ['002221.SZ'] prediction [0.2103084] truevalue [-0.07127112]
+stock index [337] stock id ['600583.SH'] prediction [0.2103084] truevalue [-0.10020877]
+stock index [349] stock id ['601666.SH'] prediction [0.2103084] truevalue [-0.39184953]
+stock index [396] stock id ['002128.SZ'] prediction [0.2103084] truevalue [-0.23699803]
+stock index [403] stock id ['002353.SZ'] prediction [0.2103084] truevalue [-0.19392813]
+stock index [501] stock id ['600348.SH'] prediction [0.2103084] truevalue [-0.12795436]
+stock index [582] stock id ['601808.SH'] prediction [0.2103084] truevalue [-0.15838509]
+stock index [598] stock id ['601699.SH'] prediction [0.2103084] truevalue [-0.28047968]
+stock index [607] stock id ['600256.SH'] prediction [0.2103084] truevalue [-0.31451613]
+stock index [619] stock id ['000983.SZ'] prediction [0.2103084] truevalue [-0.32715008]
+stock index [623] stock id ['000723.SZ'] prediction [0.2103084] truevalue [0.25348189]
+stock index [691] stock id ['601898.SH'] prediction [0.2103084] truevalue [-0.32926829]
+stock index [694] stock id ['600188.SH'] prediction [0.2103084] truevalue [-0.21628148]
+stock index [764] stock id ['601225.SH'] prediction [0.2103084] truevalue [-0.1972973]
+stock index [821] stock id ['601088.SH'] prediction [0.2103084] truevalue [-0.13768756]
+stock index [827] stock id ['600028.SH'] prediction [0.2103084] truevalue [-0.0941704]
+stock index [836] stock id ['601857.SH'] prediction [0.2103084] truevalue [-0.21630616]
+           index       pred       true
+count   10.00000  10.000000  10.000000
+mean   373.70000   0.210308  -0.212897
+std    186.41176   0.000000   0.101533
+min    108.00000   0.210308  -0.391850
+25%    222.00000   0.210308  -0.280259
+50%    343.00000   0.210308  -0.197630
+75%    561.75000   0.210308  -0.129916
+max    607.00000   0.210308  -0.100209
+TP:1, FP:20, TN:0, FN:0

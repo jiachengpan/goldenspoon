@@ -1,0 +1,72 @@
+data_path                                 -----> regress_data/past_quater_4/
+save_path                                 -----> regress_result/XY_ridge_industrial_dynamic_4_Sample_Drop_0.1/
+indicator_use_list                        -----> []
+indicator_use_type                        -----> industrial_dynamic
+train_date_list                           -----> ['2020-09-30', '2020-12-31', '2021-03-31', '2021-06-30']
+test_date_list                            -----> ['2021-09-30']
+n_month_predict                           -----> 3
+predict_mode                              -----> predict_changerate_price
+drop_small_change_stock_fortrain          -----> True
+train_drop_ponit                          -----> 0.1
+drop_small_change_stock_fortest           -----> True
+test_drop_ponit                           -----> 0.15
+training_model                            -----> ridge
+
+
+-----i_month_predict:1
+
+-----i_month_label:1_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(833, 6)
+
+-----x_test.shape:(841, 6)
+
+-----y_train.shape:(833,)
+
+-----y_test.shape:(841,)
+
+stock_pred_correctness_df is a empty dataframe.
+TP:0, FP:0, TN:0, FN:0
+-----i_month_predict:2
+
+-----i_month_label:2_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(894, 6)
+
+-----x_test.shape:(841, 6)
+
+-----y_train.shape:(894,)
+
+-----y_test.shape:(841,)
+
+stock_pred_correctness_df is a empty dataframe.
+TP:0, FP:0, TN:0, FN:0
+-----i_month_predict:3
+
+-----i_month_label:3_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(1012, 6)
+
+-----x_test.shape:(841, 6)
+
+-----y_train.shape:(1012,)
+
+-----y_test.shape:(841,)
+
+stock_pred_correctness_df is a empty dataframe.
+TP:0, FP:0, TN:0, FN:0
