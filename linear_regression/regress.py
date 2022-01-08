@@ -69,6 +69,12 @@ def get_args():
         type=float,
         default=0.15,
         help="drop ponit for task 'drop_small_change_stock_fortest'.")
+
+    parser.add_argument(
+        "--training_model",
+        default="linear",
+        help="The model for training.",
+        choices=['linear', 'ridge'])
     return parser.parse_args()
 
 
@@ -184,7 +190,12 @@ if __name__ == '__main__':
     train_drop_ponit = args.train_drop_ponit
     test_drop_ponit = args.test_drop_ponit
 
-    regress_model = linear_model.LinearRegression()
+    if args.training_model == 'linear':
+        regress_model = linear_model.LinearRegression()
+    elif args.training_model == 'ridge':
+        regress_model = linear_model.Ridge()
+    else:
+        assert("The training model was not implemented.")
 
     # 如果没有指定使用的indicator列表，则使用全部的indicator训练
     if indicator_use_list == []:
