@@ -1,0 +1,295 @@
+data_path                                 -----> regress_data/past_quater_4/
+save_path                                 -----> regress_result/xy/test_drop_rate_0.15/XY_randomforest_None_1_Sample_Drop_0.0/
+indicator_use_list                        -----> []
+indicator_use_type                        -----> None
+train_date_list                           -----> ['2021-06-30']
+test_date_list                            -----> ['2021-09-30']
+n_month_predict                           -----> 3
+predict_mode                              -----> predict_changerate_price
+drop_small_change_stock_fortrain          -----> True
+train_drop_ponit                          -----> 0.0
+drop_small_change_stock_fortest           -----> True
+test_drop_ponit                           -----> 0.15
+training_model                            -----> randomforest
+
+
+-----indicator_list:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+
+-----i_month_predict:1
+
+-----i_month_label:1_predict_changerate_price
+
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(589, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(589,)
+
+-----y_test.shape:(841,)
+
+stock index [35] stock id ['603363.SH'] prediction [-0.17058805] truevalue [0.20141343]
+stock index [125] stock id ['002149.SZ'] prediction [0.17481502] truevalue [-0.0472895]
+stock index [159] stock id ['000718.SZ'] prediction [-0.20273777] truevalue [0.]
+stock index [198] stock id ['600823.SH'] prediction [-0.158656] truevalue [-0.10734463]
+stock index [215] stock id ['603355.SH'] prediction [-0.20858628] truevalue [-0.02267396]
+stock index [240] stock id ['600459.SH'] prediction [0.16453851] truevalue [0.00974314]
+stock index [251] stock id ['600340.SH'] prediction [-0.18288897] truevalue [-0.08229426]
+stock index [281] stock id ['002705.SZ'] prediction [-0.15766686] truevalue [0.22101252]
+stock index [294] stock id ['002607.SZ'] prediction [-0.15817345] truevalue [-0.03690037]
+stock index [341] stock id ['002157.SZ'] prediction [-0.15157732] truevalue [0.06256628]
+stock index [357] stock id ['000975.SZ'] prediction [0.19330319] truevalue [0.03886926]
+stock index [408] stock id ['601005.SH'] prediction [-0.15227074] truevalue [-0.09881423]
+stock index [409] stock id ['000860.SZ'] prediction [-0.17089993] truevalue [-0.07809847]
+stock index [435] stock id ['600872.SH'] prediction [-0.15502976] truevalue [0.14164573]
+stock index [440] stock id ['000656.SZ'] prediction [-0.15070792] truevalue [-0.13953488]
+stock index [485] stock id ['002407.SZ'] prediction [0.18673515] truevalue [0.15428997]
+stock index [497] stock id ['600704.SH'] prediction [-0.20300226] truevalue [-0.03240741]
+stock index [534] stock id ['603338.SH'] prediction [-0.15256579] truevalue [-0.03106383]
+stock index [543] stock id ['002568.SZ'] prediction [-0.18062287] truevalue [-0.14619412]
+stock index [557] stock id ['603345.SH'] prediction [-0.21708869] truevalue [0.05547164]
+stock index [602] stock id ['300223.SZ'] prediction [0.16513781] truevalue [0.0692607]
+stock index [625] stock id ['000876.SZ'] prediction [-0.16587302] truevalue [-0.02506775]
+stock index [655] stock id ['600779.SH'] prediction [-0.15816491] truevalue [-0.00385372]
+stock index [656] stock id ['600600.SH'] prediction [-0.15137456] truevalue [0.29492115]
+stock index [667] stock id ['600132.SH'] prediction [-0.16608117] truevalue [0.14646041]
+stock index [691] stock id ['601898.SH'] prediction [0.17583562] truevalue [-0.22616408]
+stock index [738] stock id ['002311.SZ'] prediction [-0.165866] truevalue [-0.02596439]
+stock index [781] stock id ['002714.SZ'] prediction [-0.17550748] truevalue [0.10038536]
+stock index [785] stock id ['002466.SZ'] prediction [0.15517725] truevalue [-0.07206143]
+stock index [791] stock id ['600111.SH'] prediction [0.15937293] truevalue [0.14298622]
+stock index [799] stock id ['002142.SZ'] prediction [-0.15476469] truevalue [0.08677098]
+stock index [802] stock id ['002304.SZ'] prediction [-0.17795113] truevalue [0.12102601]
+stock index [816] stock id ['000568.SZ'] prediction [-0.17257577] truevalue [0.03326112]
+stock index [820] stock id ['600809.SH'] prediction [-0.23396159] truevalue [-0.04437401]
+stock index [826] stock id ['601166.SH'] prediction [-0.1524229] truevalue [0.01803279]
+stock index [835] stock id ['000858.SZ'] prediction [-0.16219389] truevalue [-0.01312731]
+stock index [840] stock id ['600519.SH'] prediction [-0.15789418] truevalue [-0.00214208]
+            index       pred       true
+count   10.000000  10.000000  10.000000
+mean   607.600000  -0.057998   0.024529
+std    199.183444   0.155043   0.142902
+min    240.000000  -0.158165  -0.226164
+25%    459.750000  -0.154414  -0.024261
+50%    655.500000  -0.152347   0.003801
+75%    766.000000   0.081686   0.110742
+max    840.000000   0.175836   0.294921
+TP:5, FP:3, TN:16, FN:13
+-----i_month_predict:2
+
+-----i_month_label:2_predict_changerate_price
+
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(588, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(588,)
+
+-----y_test.shape:(841,)
+
+stock index [2] stock id ['300877.SZ'] prediction [-0.15801996] truevalue [-0.04081633]
+stock index [10] stock id ['688526.SH'] prediction [-0.15549644] truevalue [-0.06763973]
+stock index [11] stock id ['688085.SH'] prediction [-0.15832896] truevalue [0.10958409]
+stock index [12] stock id ['688580.SH'] prediction [-0.15412355] truevalue [0.08945386]
+stock index [24] stock id ['688519.SH'] prediction [0.19526568] truevalue [0.02986726]
+stock index [32] stock id ['002697.SZ'] prediction [-0.16655632] truevalue [0.0210084]
+stock index [34] stock id ['688198.SH'] prediction [-0.15521923] truevalue [0.05308594]
+stock index [35] stock id ['603363.SH'] prediction [-0.17105689] truevalue [0.23321555]
+stock index [44] stock id ['600425.SH'] prediction [-0.15954529] truevalue [-0.0880829]
+stock index [51] stock id ['600976.SH'] prediction [-0.17169546] truevalue [0.24121444]
+stock index [61] stock id ['688301.SH'] prediction [0.29584518] truevalue [0.30850048]
+stock index [62] stock id ['300663.SZ'] prediction [-0.22721974] truevalue [0.06930693]
+stock index [74] stock id ['601069.SH'] prediction [-0.17046742] truevalue [0.1106383]
+stock index [75] stock id ['688356.SH'] prediction [-0.19901208] truevalue [0.49224806]
+stock index [92] stock id ['601038.SH'] prediction [-0.15931032] truevalue [-0.00726392]
+stock index [96] stock id ['001914.SZ'] prediction [-0.15620756] truevalue [-0.17960231]
+stock index [101] stock id ['688029.SH'] prediction [-0.16328261] truevalue [-0.03025842]
+stock index [108] stock id ['600971.SH'] prediction [0.18833854] truevalue [-0.23687424]
+stock index [147] stock id ['600378.SH'] prediction [-0.16480945] truevalue [0.33033419]
+stock index [154] stock id ['688516.SH'] prediction [-0.15049148] truevalue [0.31661279]
+stock index [159] stock id ['000718.SZ'] prediction [-0.23967959] truevalue [-0.07708333]
+stock index [183] stock id ['600123.SH'] prediction [0.20000158] truevalue [-0.27959502]
+stock index [187] stock id ['300379.SZ'] prediction [0.29201552] truevalue [0.09676365]
+stock index [208] stock id ['603113.SH'] prediction [0.16088895] truevalue [-0.10330579]
+stock index [215] stock id ['603355.SH'] prediction [-0.18586038] truevalue [0.2005473]
+stock index [216] stock id ['002019.SZ'] prediction [-0.15999643] truevalue [0.07393244]
+stock index [226] stock id ['600966.SH'] prediction [-0.19361555] truevalue [-0.11508282]
+stock index [250] stock id ['688363.SH'] prediction [-0.20525832] truevalue [-0.13222473]
+stock index [258] stock id ['688050.SH'] prediction [-0.17876279] truevalue [-0.14126462]
+stock index [268] stock id ['300866.SZ'] prediction [-0.22747848] truevalue [0.04417671]
+stock index [270] stock id ['002155.SZ'] prediction [-0.1910361] truevalue [-0.10634648]
+stock index [277] stock id ['600006.SH'] prediction [0.36616671] truevalue [-0.0123119]
+stock index [297] stock id ['300458.SZ'] prediction [-0.17693125] truevalue [-0.02882759]
+stock index [312] stock id ['000516.SZ'] prediction [-0.15538861] truevalue [-0.05618964]
+stock index [315] stock id ['002221.SZ'] prediction [0.16755658] truevalue [-0.07127112]
+stock index [321] stock id ['600559.SH'] prediction [0.15519895] truevalue [0.02697842]
+stock index [341] stock id ['002157.SZ'] prediction [-0.15689032] truevalue [0.02757158]
+stock index [357] stock id ['000975.SZ'] prediction [-0.15185278] truevalue [0.05889282]
+stock index [367] stock id ['002511.SZ'] prediction [-0.15467834] truevalue [-0.03703704]
+stock index [372] stock id ['300146.SZ'] prediction [-0.15342827] truevalue [-0.16643059]
+stock index [392] stock id ['600171.SH'] prediction [-0.16807513] truevalue [-0.21827837]
+stock index [396] stock id ['002128.SZ'] prediction [0.16231343] truevalue [-0.23699803]
+stock index [414] stock id ['600521.SH'] prediction [-0.2150442] truevalue [0.21788342]
+stock index [424] stock id ['300896.SZ'] prediction [-0.15090033] truevalue [-0.04724954]
+stock index [433] stock id ['000902.SZ'] prediction [-0.17816647] truevalue [-0.05875706]
+stock index [435] stock id ['600872.SH'] prediction [-0.1629083] truevalue [0.03172111]
+stock index [450] stock id ['002010.SZ'] prediction [-0.15265634] truevalue [0.09003601]
+stock index [452] stock id ['002064.SZ'] prediction [-0.21430156] truevalue [-0.12078882]
+stock index [469] stock id ['002372.SZ'] prediction [-0.16387222] truevalue [0.09769094]
+stock index [473] stock id ['600711.SH'] prediction [0.19354262] truevalue [-0.02356902]
+stock index [475] stock id ['002044.SZ'] prediction [-0.19305338] truevalue [0.00539084]
+stock index [485] stock id ['002407.SZ'] prediction [-0.16219573] truevalue [-0.09361623]
+stock index [495] stock id ['000830.SZ'] prediction [-0.16148756] truevalue [-0.17925532]
+stock index [497] stock id ['600704.SH'] prediction [-0.24866614] truevalue [-0.06481481]
+stock index [499] stock id ['600409.SH'] prediction [-0.21444894] truevalue [-0.15439856]
+stock index [500] stock id ['002092.SZ'] prediction [-0.17612191] truevalue [-0.27164179]
+stock index [501] stock id ['600348.SH'] prediction [0.19391282] truevalue [-0.12795436]
+stock index [513] stock id ['300285.SZ'] prediction [-0.17679961] truevalue [0.09113001]
+stock index [525] stock id ['600141.SH'] prediction [-0.19688235] truevalue [-0.10925307]
+stock index [526] stock id ['002078.SZ'] prediction [-0.18604802] truevalue [-0.04013378]
+stock index [532] stock id ['600663.SH'] prediction [-0.15581474] truevalue [-0.0834065]
+stock index [534] stock id ['603338.SH'] prediction [-0.18354319] truevalue [0.16780142]
+stock index [545] stock id ['600298.SH'] prediction [-0.15871819] truevalue [0.11660355]
+stock index [546] stock id ['002841.SZ'] prediction [-0.1746758] truevalue [-0.11359285]
+stock index [550] stock id ['000895.SZ'] prediction [-0.18941032] truevalue [0.04825046]
+stock index [556] stock id ['600486.SH'] prediction [-0.20304996] truevalue [0.26371006]
+stock index [557] stock id ['603345.SH'] prediction [-0.15007088] truevalue [-0.09526538]
+stock index [558] stock id ['000960.SZ'] prediction [-0.15753104] truevalue [-0.0148857]
+stock index [586] stock id ['603127.SH'] prediction [-0.1923805] truevalue [-0.11392405]
+stock index [588] stock id ['601966.SH'] prediction [-0.15179364] truevalue [0.09188883]
+stock index [607] stock id ['600256.SH'] prediction [0.28007414] truevalue [-0.31451613]
+stock index [618] stock id ['603737.SH'] prediction [-0.20671018] truevalue [0.1902]
+stock index [619] stock id ['000983.SZ'] prediction [0.194668] truevalue [-0.32715008]
+stock index [623] stock id ['000723.SZ'] prediction [0.19777406] truevalue [0.25348189]
+stock index [625] stock id ['000876.SZ'] prediction [-0.18354118] truevalue [-0.02642276]
+stock index [635] stock id ['601799.SH'] prediction [-0.15542068] truevalue [0.19889503]
+stock index [639] stock id ['000963.SZ'] prediction [-0.17044147] truevalue [0.14184636]
+stock index [642] stock id ['002080.SZ'] prediction [-0.19786445] truevalue [0.03107345]
+stock index [647] stock id ['000301.SZ'] prediction [-0.18325982] truevalue [-0.15753912]
+stock index [658] stock id ['000786.SZ'] prediction [-0.15210192] truevalue [-0.16588419]
+stock index [667] stock id ['600132.SH'] prediction [-0.19114173] truevalue [0.10180599]
+stock index [669] stock id ['600547.SH'] prediction [-0.16132016] truevalue [-0.02600714]
+stock index [674] stock id ['002648.SZ'] prediction [-0.15624291] truevalue [0.01204202]
+stock index [679] stock id ['600763.SH'] prediction [-0.2110238] truevalue [-0.34597047]
+stock index [685] stock id ['300782.SZ'] prediction [-0.21031617] truevalue [0.06477273]
+stock index [694] stock id ['600188.SH'] prediction [0.16945025] truevalue [-0.21628148]
+stock index [698] stock id ['600176.SH'] prediction [-0.15786303] truevalue [-0.00455063]
+stock index [706] stock id ['002709.SZ'] prediction [-0.1724934] truevalue [-0.11254273]
+stock index [708] stock id ['002271.SZ'] prediction [-0.1556008] truevalue [-0.10807762]
+stock index [712] stock id ['000661.SZ'] prediction [-0.22487764] truevalue [0.03174834]
+stock index [729] stock id ['601600.SH'] prediction [-0.15092214] truevalue [-0.32903226]
+stock index [762] stock id ['603806.SH'] prediction [-0.15190953] truevalue [-0.04100946]
+stock index [771] stock id ['600309.SH'] prediction [-0.22129368] truevalue [-0.1030445]
+stock index [775] stock id ['300122.SZ'] prediction [-0.15756801] truevalue [-0.18938298]
+stock index [779] stock id ['002460.SZ'] prediction [-0.22748359] truevalue [0.02804713]
+stock index [783] stock id ['300014.SZ'] prediction [-0.17116004] truevalue [0.47672422]
+stock index [784] stock id ['300760.SZ'] prediction [-0.15568562] truevalue [-0.0700275]
+stock index [786] stock id ['600585.SH'] prediction [-0.18095331] truevalue [-0.1122549]
+stock index [790] stock id ['300015.SZ'] prediction [-0.21028035] truevalue [-0.20074906]
+stock index [791] stock id ['600111.SH'] prediction [-0.16102204] truevalue [0.21572171]
+stock index [794] stock id ['600346.SH'] prediction [-0.1903623] truevalue [-0.18932412]
+stock index [797] stock id ['600436.SH'] prediction [-0.17040718] truevalue [0.18191433]
+stock index [803] stock id ['600887.SH'] prediction [-0.15150221] truevalue [0.03899204]
+stock index [807] stock id ['601899.SH'] prediction [-0.21366733] truevalue [0.00594648]
+stock index [809] stock id ['600031.SH'] prediction [-0.15934293] truevalue [-0.13915094]
+stock index [810] stock id ['002475.SZ'] prediction [-0.16511111] truevalue [0.11033324]
+stock index [816] stock id ['000568.SZ'] prediction [-0.19083386] truevalue [0.03822547]
+stock index [835] stock id ['000858.SZ'] prediction [-0.15237709] truevalue [-0.00633575]
+stock index [836] stock id ['601857.SH'] prediction [0.15681779] truevalue [-0.21630616]
+stock index [838] stock id ['300750.SZ'] prediction [-0.15249672] truevalue [0.2934396]
+stock index [840] stock id ['600519.SH'] prediction [-0.16623254] truevalue [0.05506557]
+            index       pred       true
+count   10.000000  10.000000  10.000000
+mean   313.600000   0.224349  -0.097604
+std    238.236204   0.066651   0.185152
+min     24.000000   0.160889  -0.314516
+25%    126.750000   0.189640  -0.231726
+50%    242.500000   0.194589  -0.115630
+75%    494.000000   0.260056  -0.015126
+max    694.000000   0.366167   0.308500
+TP:5, FP:12, TN:49, FN:45
+-----i_month_predict:3
+
+-----i_month_label:3_predict_changerate_price
+
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(588, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(588,)
+
+-----y_test.shape:(841,)
+
+stock index [2] stock id ['300877.SZ'] prediction [-0.1944632] truevalue [-0.04081633]
+stock index [10] stock id ['688526.SH'] prediction [-0.15451638] truevalue [-0.06763973]
+stock index [12] stock id ['688580.SH'] prediction [-0.25434079] truevalue [0.08945386]
+stock index [23] stock id ['300888.SZ'] prediction [-0.17650274] truevalue [0.07531433]
+stock index [31] stock id ['300867.SZ'] prediction [0.20533259] truevalue [-0.18471157]
+stock index [35] stock id ['603363.SH'] prediction [-0.21928007] truevalue [0.23321555]
+stock index [51] stock id ['600976.SH'] prediction [-0.15573267] truevalue [0.24121444]
+stock index [61] stock id ['688301.SH'] prediction [0.27017202] truevalue [0.30850048]
+stock index [62] stock id ['300663.SZ'] prediction [-0.28505853] truevalue [0.06930693]
+stock index [75] stock id ['688356.SH'] prediction [-0.18470542] truevalue [0.49224806]
+stock index [92] stock id ['601038.SH'] prediction [-0.19616497] truevalue [-0.00726392]
+stock index [101] stock id ['688029.SH'] prediction [-0.17045245] truevalue [-0.03025842]
+stock index [112] stock id ['688366.SH'] prediction [-0.18109656] truevalue [-0.29691639]
+stock index [159] stock id ['000718.SZ'] prediction [-0.15647008] truevalue [-0.07708333]
+stock index [183] stock id ['600123.SH'] prediction [0.47291085] truevalue [-0.27959502]
+stock index [192] stock id ['000848.SZ'] prediction [-0.19454748] truevalue [-0.11954625]
+stock index [201] stock id ['688408.SH'] prediction [-0.15322527] truevalue [0.3742379]
+stock index [215] stock id ['603355.SH'] prediction [-0.28381642] truevalue [0.2005473]
+stock index [223] stock id ['600963.SH'] prediction [0.20140091] truevalue [-0.10539523]
+stock index [258] stock id ['688050.SH'] prediction [-0.18424517] truevalue [-0.14126462]
+stock index [264] stock id ['600339.SH'] prediction [0.27532179] truevalue [-0.13580247]
+stock index [268] stock id ['300866.SZ'] prediction [-0.25546205] truevalue [0.04417671]
+stock index [281] stock id ['002705.SZ'] prediction [-0.15495428] truevalue [0.29885683]
+stock index [294] stock id ['002607.SZ'] prediction [-0.18773127] truevalue [-0.12084871]
+stock index [297] stock id ['300458.SZ'] prediction [-0.17031952] truevalue [-0.02882759]
+stock index [315] stock id ['002221.SZ'] prediction [0.1529676] truevalue [-0.07127112]
+stock index [316] stock id ['300327.SZ'] prediction [-0.17425639] truevalue [0.22711973]
+stock index [396] stock id ['002128.SZ'] prediction [0.16771385] truevalue [-0.23699803]
+stock index [400] stock id ['600483.SH'] prediction [0.15093318] truevalue [-0.17708333]
+stock index [424] stock id ['300896.SZ'] prediction [-0.18042791] truevalue [-0.04724954]
+stock index [435] stock id ['600872.SH'] prediction [-0.192363] truevalue [0.03172111]
+stock index [439] stock id ['603866.SH'] prediction [-0.16341069] truevalue [0.06019952]
+stock index [463] stock id ['603885.SH'] prediction [-0.17096248] truevalue [-0.02921647]
+stock index [475] stock id ['002044.SZ'] prediction [-0.19605552] truevalue [0.00539084]
+stock index [477] stock id ['603658.SH'] prediction [-0.15605135] truevalue [0.05028143]
+stock index [486] stock id ['600315.SH'] prediction [-0.16270427] truevalue [-0.04515393]
+stock index [497] stock id ['600704.SH'] prediction [-0.17337964] truevalue [-0.06481481]
+stock index [501] stock id ['600348.SH'] prediction [0.18458492] truevalue [-0.12795436]
+stock index [534] stock id ['603338.SH'] prediction [-0.22915126] truevalue [0.16780142]
+stock index [546] stock id ['002841.SZ'] prediction [-0.21568257] truevalue [-0.11359285]
+stock index [550] stock id ['000895.SZ'] prediction [-0.1804845] truevalue [0.04825046]
+stock index [566] stock id ['000683.SZ'] prediction [0.29257908] truevalue [-0.23974763]
+stock index [606] stock id ['600085.SH'] prediction [-0.18287326] truevalue [0.15784439]
+stock index [607] stock id ['600256.SH'] prediction [0.57532331] truevalue [-0.31451613]
+stock index [620] stock id ['600009.SH'] prediction [-0.20356295] truevalue [-0.02463277]
+stock index [635] stock id ['601799.SH'] prediction [-0.1783443] truevalue [0.19889503]
+stock index [639] stock id ['000963.SZ'] prediction [-0.18480465] truevalue [0.14184636]
+stock index [650] stock id ['000009.SZ'] prediction [-0.16663945] truevalue [-0.07559958]
+stock index [664] stock id ['300601.SZ'] prediction [-0.15750905] truevalue [0.04349405]
+stock index [671] stock id ['300661.SZ'] prediction [0.15924761] truevalue [0.03086587]
+stock index [685] stock id ['300782.SZ'] prediction [-0.25343856] truevalue [0.06477273]
+stock index [691] stock id ['601898.SH'] prediction [0.25401751] truevalue [-0.32926829]
+stock index [712] stock id ['000661.SZ'] prediction [-0.15503127] truevalue [0.03174834]
+stock index [715] stock id ['300316.SZ'] prediction [-0.15353287] truevalue [0.11623932]
+stock index [769] stock id ['300124.SZ'] prediction [-0.23629498] truevalue [0.04126984]
+stock index [790] stock id ['300015.SZ'] prediction [-0.15908865] truevalue [-0.20074906]
+stock index [809] stock id ['600031.SH'] prediction [-0.18580096] truevalue [-0.13915094]
+stock index [836] stock id ['601857.SH'] prediction [0.31712443] truevalue [-0.21630616]
+            index       pred       true
+count   10.000000  10.000000  10.000000
+mean   396.700000   0.254856  -0.100318
+std    253.673916   0.194338   0.245893
+min     61.000000  -0.153225  -0.329268
+25%    206.500000   0.188789  -0.263773
+50%    332.000000   0.262095  -0.156443
+75%    580.500000   0.306674  -0.111035
+max    836.000000   0.575323   0.374238
+TP:2, FP:12, TN:19, FN:25

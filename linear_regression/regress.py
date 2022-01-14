@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn import linear_model
+from sklearn import ensemble
 import os
 import csv
 from data_preprocess import DataPreprocess
@@ -79,7 +80,7 @@ def get_args():
         "--training_model",
         default="linear",
         help="The model for training.",
-        choices=['linear', 'ridge'])
+        choices=['linear', 'ridge', 'lasso', 'randomforest'])
     return parser.parse_args()
 
 
@@ -95,6 +96,62 @@ class Regress():
         self.train_drop_ponit = train_drop_ponit
         self.test_drop_ponit = test_drop_ponit
 
+    def result_analysis(self, y_pred, y_test, y_testID, cur_stock_price_test=None, data_type='test'):
+        if data_type == 'test':
+            print("-----test data analysis-----")
+            if self.drop_small_change_stock_fortest:
+                valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
+                    y_pred=y_pred, y_true=y_test, drop_ponit=self.test_drop_ponit, test_stock_id=y_testID)
+                full_stock_list = y_test.shape[0]
+
+                TP, FP, TN, FN = perf_measure(
+                    y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+                stock_pred_correctness = perf_measure_per_stock(
+                    full_stock_list, valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid)
+
+                stock_pred_correctness_df = pd.DataFrame(stock_pred_correctness)
+                stock_pred_correctness_df.to_csv(
+                    os.path.join(self.save_path_permonth, 'stock_pred_correctness.tsv'),
+                    sep='\t',
+                    quoting=csv.QUOTE_NONE,
+                    index=False)
+
+                if not stock_pred_correctness_df.empty:
+                    stock_is_SH = stock_pred_correctness_df['id'].str.endswith('SH')
+                    stock_pred_topN_df = stock_pred_correctness_df[stock_is_SH].sort_values('pred', ascending=False)[:10]
+                    stock_pred_top10P_df = stock_pred_topN_df[stock_pred_topN_df.pred > 0 ]
+
+                    stock_pred_topN_df.to_csv(
+                        os.path.join(self.save_path_permonth, 'stock_pred_topN.tsv'),
+                        sep='\t',
+                        quoting=csv.QUOTE_NONE,
+                        index=False)
+                    print("-----top10\n", stock_pred_topN_df)
+                    print("-----top10-describe, include pred N\n", stock_pred_topN_df.describe())
+                    print("-----top10-describe, exclude pred N\n", stock_pred_top10P_df.describe())
+                else:
+                    print("stock_pred_correctness_df is a empty dataframe.")
+                print("")
+                print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
+        elif data_type == 'train':
+            print("-----train data analysis-----")
+            valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
+                y_pred=y_pred, y_true=y_test, drop_ponit=0.0, test_stock_id=y_testID)
+
+            TP, FP, TN, FN = perf_measure(
+                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+            print("no drop:")
+            print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
+
+            valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
+                y_pred=y_pred, y_true=y_test, drop_ponit=0.15, test_stock_id=y_testID)
+
+            TP, FP, TN, FN = perf_measure(
+                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+            print("drop 0.15:")
+            print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
+        return
+
     # Linear regression
     def run(self, data_path, train_date_list, test_date_list, n_month_predict):
         # 1.数据预处理
@@ -103,17 +160,18 @@ class Regress():
             self.i_month_label, self.indicator_list).run()
 
         # 2.获取训练集的label、测试集的label、测试集的label对应的股票ID
-        ## 训练集重映射
+        # - 训练集重映射
         if self.drop_small_change_stock_fortrain or (self.train_drop_ponit==0.0):
             ## 需要按照y_train大于drop_ponit做判断, 保留x_train和y_train中涨跌幅绝对值大于drop_ponit的数据
             y_train_ = y_train_[self.i_month_label]
-            y_trainID_ = train_ID_df['id']
+            y_trainID = train_ID_df['id']
             valid_train_stock_list, y_train, x_train, train_stock_id_valid = drop_small_change_stock_fntrain(
-                y_train=y_train_, x_train=x_train_, drop_ponit=self.train_drop_ponit, train_stock_id=y_trainID_)
+                y_train=y_train_, x_train=x_train_, drop_ponit=self.train_drop_ponit, train_stock_id=y_trainID)
         else:
             x_train = x_train_
             y_train = y_train_[self.i_month_label]
-        ## 测试集重映射
+            y_trainID = train_ID_df['id']
+        # - 测试集重映射
         cur_stock_price_test = y_test_['0_label']
         x_test = x_test_
         y_test = y_test_[self.i_month_label]
@@ -127,10 +185,17 @@ class Regress():
         self.model.fit(x_train, y_train)
         y_pred = self.model.predict(x_test)
         # R2_y_pred_y_test = r2_score(y_test, y_pred)
-        indicator_weight = list(
-            zip(self.indicator_list, list(self.model.coef_)))
 
-        ## 打印回归模型权重参数
+        if args.training_model in ['linear', 'ridge', 'lasso']:
+            indicator_weight = list(
+                zip(self.indicator_list, list(self.model.coef_)))
+        elif args.training_model in ['randomforest']:
+            indicator_weight = list(
+                zip(self.indicator_list, list(self.model.feature_importances_)))
+        else:
+            assert("indicator_weight error!")
+
+        # - 打印回归模型权重参数
         with open(self.save_path_permonth + 'indicator_weight.log', 'w') as f:
             for i_weight in indicator_weight:
                 f.write(str(i_weight))
@@ -138,43 +203,12 @@ class Regress():
             f.close()
 
         # 4.结果分析
-        if self.drop_small_change_stock_fortest:
-            valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
-                y_pred=y_pred, y_true=y_test, drop_ponit=self.test_drop_ponit, test_stock_id=y_testID)
-            full_stock_list = y_test.shape[0]
-
-            TP, FP, TN, FN = perf_measure(
-                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
-            stock_pred_correctness = perf_measure_per_stock(
-                full_stock_list, valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid)
-
-            stock_pred_correctness_df = pd.DataFrame(stock_pred_correctness)
-            stock_pred_correctness_df.to_csv(
-                os.path.join(self.save_path_permonth, 'stock_pred_correctness.tsv'),
-                sep='\t',
-                quoting=csv.QUOTE_NONE,
-                index=False)
-
-
-            if not stock_pred_correctness_df.empty:
-                stock_is_SH = stock_pred_correctness_df['id'].str.endswith('SH')
-                stock_pred_topN_df = stock_pred_correctness_df[stock_is_SH].sort_values('pred', ascending=False)[:10]
-                stock_pred_topN_df.to_csv(
-                    os.path.join(self.save_path_permonth, 'stock_pred_topN.tsv'),
-                    sep='\t',
-                    quoting=csv.QUOTE_NONE,
-                    index=False)
-                print(stock_pred_topN_df.describe())
-            else:
-                print("stock_pred_correctness_df is a empty dataframe.")
-
-            print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
-        else:
-            assert(0)
-            TP, FP, TN, FN = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
-            # self.draw(y_pred, y_test, cur_stock_price_test, R2_y_pred_y_test, self.i_month_label, self.save_path_permonth, show_interval=50)
-        return
-
+        # - test data analysis
+        self.result_analysis(y_pred, y_test, y_testID, cur_stock_price_test, data_type='test')
+        # - train data analysis
+        y_pred_fortrain = self.model.predict(x_train)
+        y_test_fortrain = y_train
+        self.result_analysis(y_pred=y_pred_fortrain, y_test=y_test_fortrain, y_testID=y_trainID, cur_stock_price_test=None, data_type='train')
 
 if __name__ == '__main__':
     # base parameter
@@ -203,6 +237,10 @@ if __name__ == '__main__':
         regress_model = linear_model.LinearRegression()
     elif args.training_model == 'ridge':
         regress_model = linear_model.Ridge()
+    elif args.training_model == 'lasso':
+        regress_model = linear_model.Lasso()
+    elif args.training_model == 'randomforest':
+        regress_model = ensemble.RandomForestRegressor()
     else:
         assert("The training model was not implemented.")
 
@@ -216,7 +254,7 @@ if __name__ == '__main__':
                 1:]  # exclude 'id'
             indicator_list = all_indicator_list
             print("-----indicator_list:{}\n".format(indicator_list))
-            assert(0)
+            # assert(0)
         else:
             indicator_list = indicator_use_list
     elif indicator_use_type == 'industrial_static':

@@ -1,0 +1,191 @@
+data_path                                 -----> regress_data/past_quater_4/
+save_path                                 -----> regress_result/xy/test_drop_ponit_0.15/linear/XY_linear_4_Sample_Drop_0.1/
+indicator_use_list                        -----> []
+indicator_use_type                        -----> None
+train_date_list                           -----> ['2020-09-30', '2020-12-31', '2021-03-31', '2021-06-30']
+test_date_list                            -----> ['2021-09-30']
+n_month_predict                           -----> 3
+predict_mode                              -----> predict_changerate_price
+drop_small_change_stock_fortrain          -----> True
+train_drop_ponit                          -----> 0.1
+drop_small_change_stock_fortest           -----> True
+test_drop_ponit                           -----> 0.15
+training_model                            -----> linear
+
+
+-----indicator_list:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+
+-----i_month_predict:1
+
+-----i_month_label:1_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(833, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(833,)
+
+-----y_test.shape:(841,)
+
+-----sample_weight: None
+-----test data analysis-----
+-----top10
+      index         id      pred      true type
+162    204  603505.SH  0.568707  0.104921   TP
+575    690  600426.SH  0.564445 -0.056180   FP
+192    240  600459.SH  0.563928  0.009743   TP
+168    211  603688.SH  0.561053  0.429306   TP
+622    752  603993.SH  0.561005 -0.008278   FP
+654    794  600346.SH  0.559794 -0.153610   FP
+113    147  600378.SH  0.559583  0.041131   TP
+542    644  601233.SH  0.558932 -0.091158   FP
+582    698  600176.SH  0.551955  0.088737   TP
+465    556  600486.SH  0.544062  0.123224   TP
+-----top10-describe, include pred N
+            index       pred       true
+count   10.00000  10.000000  10.000000
+mean   493.60000   0.559346   0.048784
+std    260.77926   0.006904   0.160378
+min    147.00000   0.544062  -0.153610
+25%    218.25000   0.559095  -0.044204
+50%    600.00000   0.560399   0.025437
+75%    696.00000   0.563209   0.100875
+max    794.00000   0.568707   0.429306
+-----top10-describe, exclude pred N
+            index       pred       true
+count   10.00000  10.000000  10.000000
+mean   493.60000   0.559346   0.048784
+std    260.77926   0.006904   0.160378
+min    147.00000   0.544062  -0.153610
+25%    218.25000   0.559095  -0.044204
+50%    600.00000   0.560399   0.025437
+75%    696.00000   0.563209   0.100875
+max    794.00000   0.568707   0.429306
+
+TP:302, FP:384, TN:0, FN:1
+-----train data analysis-----
+no drop:
+TP:290, FP:165, TN:330, FN:48
+drop 0.15:
+TP:15, FP:3, TN:116, FN:5
+-----i_month_predict:2
+
+-----i_month_label:2_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(894, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(894,)
+
+-----y_test.shape:(841,)
+
+-----sample_weight: None
+-----test data analysis-----
+-----top10
+      index         id      pred      true type
+682    691  601898.SH  0.903049 -0.329268   FP
+792    801  603260.SH  0.899454 -0.140175   FP
+206    211  603688.SH  0.870540  0.503856   TP
+517    525  600141.SH  0.862419 -0.109253   FP
+11      13  688268.SH  0.858175  0.112164   TP
+234    240  600459.SH  0.857619  0.168291   TP
+635    644  601233.SH  0.855055 -0.100273   FP
+477    484  600497.SH  0.854814  0.041580   TP
+628    637  603026.SH  0.849302 -0.341231   FP
+650    659  600219.SH  0.849001  0.004577   TP
+-----top10-describe, include pred N
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   490.500000   0.865943  -0.018973
+std    253.888974   0.019634   0.249314
+min     13.000000   0.849001  -0.341231
+25%    301.000000   0.854875  -0.132444
+50%    581.000000   0.857897  -0.047848
+75%    655.250000   0.868510   0.094518
+max    801.000000   0.903049   0.503856
+-----top10-describe, exclude pred N
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   490.500000   0.865943  -0.018973
+std    253.888974   0.019634   0.249314
+min     13.000000   0.849001  -0.341231
+25%    301.000000   0.854875  -0.132444
+50%    581.000000   0.857897  -0.047848
+75%    655.250000   0.868510   0.094518
+max    801.000000   0.903049   0.503856
+
+TP:435, FP:397, TN:0, FN:0
+-----train data analysis-----
+no drop:
+TP:356, FP:182, TN:286, FN:70
+drop 0.15:
+TP:116, FP:32, TN:111, FN:7
+-----i_month_predict:3
+
+-----i_month_label:3_predict_changerate_price
+
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+-----x_train.shape:(1012, 30)
+
+-----x_test.shape:(841, 30)
+
+-----y_train.shape:(1012,)
+
+-----y_test.shape:(841,)
+
+-----sample_weight: None
+-----test data analysis-----
+-----top10
+      index         id      pred      true type
+475    691  601898.SH  0.841204 -0.329268   FP
+115    183  600123.SH  0.782343 -0.279595   FP
+409    598  601699.SH  0.763562 -0.280480   FP
+342    501  600348.SH  0.743798 -0.127954   FP
+174    264  600339.SH  0.743577 -0.135802   FP
+477    694  600188.SH  0.735801 -0.216281   FP
+557    836  601857.SH  0.733172 -0.216306   FP
+229    337  600583.SH  0.732478 -0.100209   FP
+417    607  600256.SH  0.708008 -0.314516   FP
+132    208  603113.SH  0.702704 -0.103306   FP
+-----top10-describe, include pred N
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   491.900000   0.748665  -0.210372
+std    229.837841   0.040003   0.088639
+min    183.000000   0.702704  -0.329268
+25%    282.250000   0.732652  -0.280259
+50%    549.500000   0.739689  -0.216294
+75%    670.000000   0.758621  -0.129916
+max    836.000000   0.841204  -0.100209
+-----top10-describe, exclude pred N
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   491.900000   0.748665  -0.210372
+std    229.837841   0.040003   0.088639
+min    183.000000   0.702704  -0.329268
+25%    282.250000   0.732652  -0.280259
+50%    549.500000   0.739689  -0.216294
+75%    670.000000   0.758621  -0.129916
+max    836.000000   0.841204  -0.100209
+
+TP:312, FP:246, TN:0, FN:0
+-----train data analysis-----
+no drop:
+TP:298, FP:205, TN:381, FN:128
+drop 0.15:
+TP:92, FP:32, TN:88, FN:11
