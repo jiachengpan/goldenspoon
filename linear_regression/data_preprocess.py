@@ -1,7 +1,8 @@
 import pandas as pd
+import copy
 
 class DataPreprocess():
-    def __init__(self, data_path, train_date_list, test_date_list, n_month_predict, i_month_label, indicator_list):
+    def __init__(self, data_path, train_date_list, test_date_list, n_month_predict, i_month_label, indicator_list, label_type):
         self.data_path = data_path
         self.train_date_list = train_date_list
         self.test_date_list = test_date_list
@@ -9,6 +10,7 @@ class DataPreprocess():
         # '1_predict_changerate_price' or '1_predict_absvalue_price'
         self.i_month_label = i_month_label
         self.indicator_list = indicator_list
+        self.label_type = label_type
 
     # 1. Data generation
     def merge_df_indicator_label(self, df_indicator, df_label_list):
@@ -55,8 +57,27 @@ class DataPreprocess():
         Y_df = pd.concat([self.end_date_stock_price, Y_df], axis=1)
         ID_df = df_indicator_label.iloc[:,
                                         df_indicator_label.columns.str.endswith('id')]
+        Y_df = pd.concat([ID_df, Y_df], axis=1)
+        X_df = pd.concat([ID_df, X_df], axis=1)
         return X_df, Y_df, ID_df
 
+    def label_classifier(self,numeric_data):
+        temp_data = numeric_data.iloc[:,2] ## NOTE TODO
+        for i in range (temp_data.shape[0]):
+            if temp_data[i] >= 0.15:
+                temp_data[i]='big_positive'
+            elif (temp_data[i] < 0.15) and (temp_data[i]>=0.05):
+                temp_data[i]='mid_positive'
+            elif (temp_data[i] < 0.05) and (temp_data[i]> -0.05):
+                temp_data[i]='small'
+            elif (temp_data[i] <= -0.05) and (temp_data[i]> -0.15):
+                temp_data[i]='mid_negative'    
+            elif (temp_data[i] <= -0.15):
+                temp_data[i]='big_negative'   
+            numeric_data.iloc[i,1]=temp_data[i]
+        classified_data = numeric_data
+        return classified_data
+    
     def run(self):
         totaldate_X_df = pd.DataFrame()
         totaldate_Y_df = pd.DataFrame()
@@ -107,4 +128,18 @@ class DataPreprocess():
             else:
                 print("{} is a empty dataframe!".format(indicator_pickle))
         x_test, y_test, test_ID_df = X_df, Y_df, test_ID_df
-        return x_train, x_test, y_train, y_test, train_ID_df, test_ID_df
+
+
+        if self.label_type == 'regress':
+            return x_train, x_test, y_train, y_test, train_ID_df, test_ID_df,  None, None
+        elif self.label_type == 'class':
+            y_train_regress = copy.deepcopy(y_train)
+            y_test_regress = copy.deepcopy(y_test) 
+            y_train_classified = self.label_classifier(y_train)
+            y_test_classified = self.label_classifier(y_test)
+ 
+            return x_train, x_test, y_train_classified, y_test_classified, train_ID_df, test_ID_df,  y_train_regress,y_test_regress
+        else:
+            assert("label type error!")
+        
+        

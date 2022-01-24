@@ -3,11 +3,13 @@ import numpy as np
 
 from sklearn import linear_model
 from sklearn import ensemble
+from sklearn import tree
 import os
 import csv
 from data_preprocess import DataPreprocess
 import argparse
-from result_analysis import drop_small_change_stock_fntrain, drop_small_change_stock_fntest, perf_measure, perf_measure_per_stock
+from result_analysis import drop_small_change_stock_fntrain, drop_small_change_stock_fntest, perf_measure, perf_measure_per_stock, draw_confusion_matrix
+from pandas.testing import assert_frame_equal
 
 
 def get_args():
@@ -30,8 +32,8 @@ def get_args():
     parser.add_argument(
         "--indicator_use_type",
         help="Set the type of indicators you want to train.",
-        default='None',
-        choices=['None', 'industrial_static', 'industrial_dynamic', 'stock_dynamic', 'static_stock_dynamic','all_dynamic'])
+        default='all',
+        choices=['all', 'all_with_premonth_label', 'industrial_static', 'industrial_dynamic', 'stock_dynamic', 'static_stock_dynamic','all_dynamic'])
 
     parser.add_argument(
         "--train_date_list",
@@ -80,7 +82,12 @@ def get_args():
         "--training_model",
         default="linear",
         help="The model for training.",
-        choices=['linear', 'ridge', 'lasso', 'randomforest'])
+        choices=['linear', 'ridge', 'lasso', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier'])
+    parser.add_argument(
+        "--label_type",
+        default="class",
+        help="Label type.",
+        choices=['regress','class'])
     return parser.parse_args()
 
 
@@ -96,16 +103,26 @@ class Regress():
         self.train_drop_ponit = train_drop_ponit
         self.test_drop_ponit = test_drop_ponit
 
-    def result_analysis(self, y_pred, y_test, y_testID, cur_stock_price_test=None, data_type='test'):
+    def result_analysis(self, y_pred, y_test, y_testID, label_type, cur_stock_price_test=None, data_type='test'):
+        if label_type == 'class':
+            acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative, acc_positive, acc_negative = perf_measure(
+                y_pred, y_test, cur_stock_price_test, self.i_month_label)
+            print("label type is class!")
+            print("acc_small:{}, acc_mid_positive:{}, acc_big_positive:{}, acc_mid_negative:{}, acc_big_negative:{}".format(acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative))
+            print("acc_positive:{}, acc_negative:{}".format(acc_positive, acc_negative))
+            return
+        
+        print("label type is regress!")
         if data_type == 'test':
-            print("-----test data analysis-----")
+            print("\n-----test data analysis:")
             if self.drop_small_change_stock_fortest:
                 valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                     y_pred=y_pred, y_true=y_test, drop_ponit=self.test_drop_ponit, test_stock_id=y_testID)
                 full_stock_list = y_test.shape[0]
 
                 TP, FP, TN, FN = perf_measure(
-                    y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+                    y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label)
+                draw_confusion_matrix(TP, FP, TN, FN, self.save_path_permonth)
                 stock_pred_correctness = perf_measure_per_stock(
                     full_stock_list, valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid)
 
@@ -126,42 +143,69 @@ class Regress():
                         sep='\t',
                         quoting=csv.QUOTE_NONE,
                         index=False)
-                    print("-----top10\n", stock_pred_topN_df)
-                    print("-----top10-describe, include pred N\n", stock_pred_topN_df.describe())
-                    print("-----top10-describe, exclude pred N\n", stock_pred_top10P_df.describe())
+                    print("top10\n", stock_pred_topN_df)
+                    # print("-----top10-describe, include pred N\n", stock_pred_topN_df.describe())
+                    print("top10-describe, exclude Negative Pred!\n", stock_pred_top10P_df.describe())
                 else:
                     print("stock_pred_correctness_df is a empty dataframe.")
-                print("")
                 print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
         elif data_type == 'train':
-            print("-----train data analysis-----")
+            print("\n-----train data analysis:")
             valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                 y_pred=y_pred, y_true=y_test, drop_ponit=0.0, test_stock_id=y_testID)
 
             TP, FP, TN, FN = perf_measure(
-                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label)
             print("no drop:")
             print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
-
+            
             valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                 y_pred=y_pred, y_true=y_test, drop_ponit=0.15, test_stock_id=y_testID)
 
             TP, FP, TN, FN = perf_measure(
-                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label, self.save_path_permonth)
+                y_pred_valid, y_true_valid, cur_stock_price_test, self.i_month_label)
             print("drop 0.15:")
             print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
         return
+    
+    def data_processing_for_run(self,x_train_,x_test_,y_train_,y_test_,train_ID_df,test_ID_df):
+        global pretrain_month_label
+        global pretest_month_label
+        if indicator_use_type == 'all_with_premonth_label' and i_month_predict > 1:
+            pre_month_label = str(i_month_predict-1) + '_predict_changerate_price'
 
-    # Linear regression
-    def run(self, data_path, train_date_list, test_date_list, n_month_predict):
-        # 1.数据预处理
-        x_train_, x_test_, y_train_, y_test_, train_ID_df, test_ID_df = DataPreprocess(
-            data_path, train_date_list, test_date_list, n_month_predict,
-            self.i_month_label, self.indicator_list).run()
+            ## 获取1月的label作为2月的indicator
+            assert_frame_equal(x_train_[['id']], pretrain_month_label[['id']])
+            x_train_ = pd.concat([x_train_, pretrain_month_label[[pre_month_label]]], axis=1)
+            assert_frame_equal(x_test_[['id']], pretest_month_label[['id']])
+            x_test_ = pd.concat([x_test_, pretest_month_label[[pre_month_label]]], axis=1)
+
+            new_train_ID_df = x_train_.iloc[:,x_train_.columns.str.endswith('id')]
+            new_test_ID_df = x_test_.iloc[:,x_test_.columns.str.endswith('id')]
+
+            assert_frame_equal(new_train_ID_df, train_ID_df)
+            assert_frame_equal(new_test_ID_df, test_ID_df)
+
+            x_train_ = x_train_.drop(columns=['id'])
+            x_test_ = x_test_.drop(columns=['id'])
+
+            pretrain_month_label = y_train_regress_label
+            pretest_month_label = y_test_regress_label
+        else:
+            pretrain_month_label = y_train_regress_label
+            pretest_month_label = y_test_regress_label
+            new_train_ID_df = x_train_.iloc[:,x_train_.columns.str.endswith('id')]
+            new_test_ID_df = x_test_.iloc[:,x_test_.columns.str.endswith('id')]
+
+            assert_frame_equal(new_train_ID_df, train_ID_df)
+            assert_frame_equal(new_test_ID_df, test_ID_df)
+
+            x_train_ = x_train_.drop(columns=['id'])
+            x_test_ = x_test_.drop(columns=['id'])
 
         # 2.获取训练集的label、测试集的label、测试集的label对应的股票ID
         # - 训练集重映射
-        if self.drop_small_change_stock_fortrain or (self.train_drop_ponit==0.0):
+        if (self.drop_small_change_stock_fortrain or (self.train_drop_ponit==0.0)) and (label_type != 'class'):
             ## 需要按照y_train大于drop_ponit做判断, 保留x_train和y_train中涨跌幅绝对值大于drop_ponit的数据
             y_train_ = y_train_[self.i_month_label]
             y_trainID = train_ID_df['id']
@@ -172,24 +216,50 @@ class Regress():
             y_train = y_train_[self.i_month_label]
             y_trainID = train_ID_df['id']
         # - 测试集重映射
-        cur_stock_price_test = y_test_['0_label']
         x_test = x_test_
         y_test = y_test_[self.i_month_label]
         y_testID = test_ID_df['id']
+        return x_train,x_test,y_train,y_test,y_trainID,y_testID
+
+    # Linear regression
+    def run(self, data_path, train_date_list, test_date_list, n_month_predict):
+        # 1.数据预处理
+        print("---------------------- data preprocess ----------------------")
+        global y_train_regress_label
+        global y_test_regress_label
+        x_train_, x_test_, y_train_, y_test_, train_ID_df, test_ID_df, y_train_regress_label, y_test_regress_label = DataPreprocess(
+            data_path, train_date_list, test_date_list, n_month_predict,
+            self.i_month_label, self.indicator_list,
+            label_type).run()
+
+        if label_type == 'regress':
+            assert(y_train_regress_label==None)
+            y_train_regress_label = y_train_
+            y_test_regress_label = y_test_
+        
+        x_train, x_test, y_train, y_test, y_trainID, y_testID = self.data_processing_for_run(x_train_,x_test_,y_train_,y_test_,train_ID_df,test_ID_df)
+
 
         # 3.模型训练
+        print("---------------------- model runing ----------------------")
         print("-----x_train.shape:{}\n".format(x_train.shape))
+        print("-----x_train columns:{}\n".format(x_train.columns.values.tolist()))
         print("-----x_test.shape:{}\n".format(x_test.shape))
+        print("-----x_test columns:{}\n".format(x_test.columns.values.tolist()))
+
         print("-----y_train.shape:{}\n".format(y_train.shape))
+        # print("-----y_train columns:{}\n".format(y_train.columns.values.tolist()))
         print("-----y_test.shape:{}\n".format(y_test.shape))
+        # print("-----y_test columns:{}\n".format(y_test.columns.values.tolist()))
+        print("x_train:",x_train)
+        print("y_train:",y_train)
         self.model.fit(x_train, y_train)
         y_pred = self.model.predict(x_test)
-        # R2_y_pred_y_test = r2_score(y_test, y_pred)
 
         if args.training_model in ['linear', 'ridge', 'lasso']:
             indicator_weight = list(
                 zip(self.indicator_list, list(self.model.coef_)))
-        elif args.training_model in ['randomforest']:
+        elif args.training_model in ['randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier']:
             indicator_weight = list(
                 zip(self.indicator_list, list(self.model.feature_importances_)))
         else:
@@ -203,15 +273,17 @@ class Regress():
             f.close()
 
         # 4.结果分析
+        print("---------------------- result analysis ----------------------")
         # - test data analysis
-        self.result_analysis(y_pred, y_test, y_testID, cur_stock_price_test, data_type='test')
+        self.result_analysis(y_pred, y_test, y_testID, label_type, cur_stock_price_test=y_test_['0_label'], data_type='test')
         # - train data analysis
         y_pred_fortrain = self.model.predict(x_train)
         y_test_fortrain = y_train
-        self.result_analysis(y_pred=y_pred_fortrain, y_test=y_test_fortrain, y_testID=y_trainID, cur_stock_price_test=None, data_type='train')
+        self.result_analysis(y_pred=y_pred_fortrain, y_test=y_test_fortrain, y_testID=y_trainID, label_type=label_type, cur_stock_price_test=None, data_type='train')
 
 if __name__ == '__main__':
     # base parameter
+    print("***********************************************************")
     args = get_args()
     for arg in vars(args):
         print(format(arg, '<40'), format(" -----> " + str(getattr(args, arg)), '<'))
@@ -221,6 +293,7 @@ if __name__ == '__main__':
 
     n_month_predict = args.n_month_predict
     indicator_use_list = args.indicator_use_list
+    global indicator_use_type
     indicator_use_type = args.indicator_use_type
 
     train_date_list = args.train_date_list
@@ -233,6 +306,7 @@ if __name__ == '__main__':
     train_drop_ponit = args.train_drop_ponit
     test_drop_ponit = args.test_drop_ponit
 
+    label_type = args.label_type
     if args.training_model == 'linear':
         regress_model = linear_model.LinearRegression()
     elif args.training_model == 'ridge':
@@ -241,10 +315,23 @@ if __name__ == '__main__':
         regress_model = linear_model.Lasso()
     elif args.training_model == 'randomforest':
         regress_model = ensemble.RandomForestRegressor()
+        label_type = 'regress'
+    elif args.training_model == 'randomforestclssifier':
+        regress_model = ensemble.RandomForestClassifier()
+        label_type = 'class'
+    elif args.training_model == 'adaboostregressor':
+        base_estimator = ensemble.RandomForestRegressor(n_estimators=10, max_depth=10)
+        regress_model = ensemble.AdaBoostRegressor(base_estimator=base_estimator, n_estimators=100, learning_rate=0.8)
+        label_type = 'regress'
+    elif args.training_model == 'adaboostclassifier':
+        base_estimator = ensemble.RandomForestClassifier(n_estimators=10, max_depth=10)
+        # base_estimator = tree.DecisionTreeClassifier(max_features=None, max_depth=30)
+        regress_model = ensemble.AdaBoostClassifier(base_estimator=base_estimator, n_estimators=100, learning_rate=0.8)#algorithm="SAMME"
+        label_type = 'class'
     else:
         assert("The training model was not implemented.")
 
-    if indicator_use_type == 'None':
+    if (indicator_use_type == 'all') or (indicator_use_type == 'all_with_premonth_label'):
         # 如果没有指定type,同时没有使用的indicator列表，则使用全部的indicator训练
         if indicator_use_list == []:
             indicator_pickle = args.data_path + \
@@ -281,12 +368,15 @@ if __name__ == '__main__':
     else:
         assert("Wrong indicator list!")
 
-
+    train_month_label = pd.DataFrame()
+    print("-----train_month_label:", train_month_label)
+    test_month_label = pd.DataFrame()
+    print("-----test_month_label:", test_month_label)
+    global i_month_predict
     for i in range(n_month_predict):
         i_month_predict = i+1
-        print("-----i_month_predict:{}\n".format(i_month_predict))
         i_month_label = str(i_month_predict) + '_' + predict_mode
-        print("-----i_month_label:{}\n".format(i_month_label))
+        print("************************** {} : {} **************************".format(i_month_predict, i_month_label))
 
         save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
         if not os.path.exists(save_path_permonth):

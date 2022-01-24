@@ -1,0 +1,180 @@
+***********************************************************
+data_path                                 -----> regress_data/past_quater_4/
+save_path                                 -----> regress_result/xy/test_drop_ponit_0.15/adaboostregressor/XY_regress_adaboostregressor_all_with_premonth_label_4_Sample_Drop_0.0/
+indicator_use_list                        -----> []
+indicator_use_type                        -----> all_with_premonth_label
+train_date_list                           -----> ['2020-09-30', '2020-12-31', '2021-03-31', '2021-06-30']
+test_date_list                            -----> ['2021-09-30']
+n_month_predict                           -----> 3
+predict_mode                              -----> predict_changerate_price
+drop_small_change_stock_fortrain          -----> True
+train_drop_ponit                          -----> 0.0
+drop_small_change_stock_fortest           -----> True
+test_drop_ponit                           -----> 0.15
+training_model                            -----> adaboostregressor
+label_type                                -----> class
+
+
+-----indicator_list:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+
+-----train_month_label: Empty DataFrame
+Columns: []
+Index: []
+-----test_month_label: Empty DataFrame
+Columns: []
+Index: []
+************************** 1 : 1_predict_changerate_price **************************
+---------------------- data preprocess ----------------------
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+---------------------- model runing ----------------------
+-----x_train.shape:(1746, 30)
+
+-----x_train columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+
+-----x_test.shape:(841, 30)
+
+-----x_test columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry']
+
+-----y_train.shape:(1746,)
+
+-----y_test.shape:(841,)
+
+---------------------- result analysis ----------------------
+label type is regress!
+
+-----test data analysis:
+top10
+    index         id      pred      true type
+2     98  601577.SH  0.167190 -0.027778   FP
+0      9  688595.SH  0.153619  0.024105   TP
+1     75  688356.SH -0.152934  0.080388   FN
+top10-describe, exclude Negative Pred!
+            index      pred      true
+count   2.000000  2.000000  2.000000
+mean   53.500000  0.160404 -0.001836
+std    62.932504  0.009596  0.036687
+min     9.000000  0.153619 -0.027778
+25%    31.250000  0.157011 -0.014807
+50%    53.500000  0.160404 -0.001836
+75%    75.750000  0.163797  0.011135
+max    98.000000  0.167190  0.024105
+TP:3, FP:2, TN:0, FN:1
+label type is regress!
+
+-----train data analysis:
+no drop:
+TP:498, FP:169, TN:898, FN:181
+drop 0.15:
+TP:86, FP:6, TN:43, FN:1
+************************** 2 : 2_predict_changerate_price **************************
+---------------------- data preprocess ----------------------
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+---------------------- model runing ----------------------
+-----x_train.shape:(1743, 31)
+
+-----x_train columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry', '1_predict_changerate_price']
+
+-----x_test.shape:(841, 31)
+
+-----x_test columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry', '1_predict_changerate_price']
+
+-----y_train.shape:(1743,)
+
+-----y_test.shape:(841,)
+
+---------------------- result analysis ----------------------
+label type is regress!
+
+-----test data analysis:
+top10
+      index         id      pred      true type
+95     683  688599.SH  0.426608  0.365385   TP
+30     275  603606.SH  0.394391  0.953020   TP
+59     474  600039.SH  0.378778  0.421801   TP
+11     110  688518.SH  0.375631  0.645247   TP
+73     569  601689.SH  0.339929  0.840011   TP
+25     211  603688.SH  0.310283  0.503856   TP
+6       52  600742.SH  0.294115  0.553710   TP
+1       20  688357.SH  0.293009  0.668099   TP
+34     295  688388.SH  0.281000  0.139962   TP
+112    824  601633.SH  0.274716  0.138023   TP
+top10-describe, exclude Negative Pred!
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   351.300000   0.336846   0.522911
+std    275.309947   0.053824   0.269306
+min     20.000000   0.274716   0.138023
+25%    135.250000   0.293285   0.379489
+50%    285.000000   0.325106   0.528783
+75%    545.250000   0.377991   0.662386
+max    824.000000   0.426608   0.953020
+TP:69, FP:6, TN:37, FN:2
+label type is regress!
+
+-----train data analysis:
+no drop:
+TP:687, FP:142, TN:824, FN:90
+drop 0.15:
+TP:267, FP:0, TN:216, FN:0
+************************** 3 : 3_predict_changerate_price **************************
+---------------------- data preprocess ----------------------
+train date: 2020-09-30
+train date: 2020-12-31
+train date: 2021-03-31
+train date: 2021-06-30
+test date: 2021-09-30
+---------------------- model runing ----------------------
+-----x_train.shape:(1748, 31)
+
+-----x_train columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry', '2_predict_changerate_price']
+
+-----x_test.shape:(841, 31)
+
+-----x_test columns:['是', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股', 'market_value_mean', 'market_value_std', 'fund_shareholding_mean', 'fund_shareholding_std', 'fund_number_mean', 'fund_number_std', 'close_price_mean', 'close_price_std', 'avg_price_mean', 'avg_price_std', 'turnover_rate_mean', 'turnover_rate_std', 'amplitutde_mean', 'amplitutde_std', 'margin_diff_mean', 'margin_diff_std', 'share_ratio_of_funds_mean', 'share_ratio_of_funds_std', 'num_of_funds_mean', 'num_of_funds_std', 'fund_owner_affinity_mean', 'fund_owner_affinity_std', 'cyclical_industry', '2_predict_changerate_price']
+
+-----y_train.shape:(1748,)
+
+-----y_test.shape:(841,)
+
+---------------------- result analysis ----------------------
+label type is regress!
+
+-----test data analysis:
+top10
+      index         id      pred      true type
+5       20  688357.SH  0.897366  0.668099   TP
+134    428  600522.SH  0.814311  1.041758   TP
+27     110  688518.SH  0.735835  0.645247   TP
+93     275  603606.SH  0.734731  0.953020   TP
+36     130  601137.SH  0.708331  0.655012   TP
+146    471  600765.SH  0.706735  0.663926   TP
+182    569  601689.SH  0.636454  0.840011   TP
+13      52  600742.SH  0.581451  0.553710   TP
+68     211  603688.SH  0.532660  0.503856   TP
+73     223  600963.SH  0.513972 -0.105395   FP
+top10-describe, exclude Negative Pred!
+             index       pred       true
+count   10.000000  10.000000  10.000000
+mean   248.900000   0.686185   0.641924
+std    185.966813   0.121755   0.313150
+min     20.000000   0.513972  -0.105395
+25%    115.000000   0.595201   0.576594
+50%    217.000000   0.707533   0.659469
+75%    389.750000   0.735559   0.797033
+max    569.000000   0.897366   1.041758
+TP:153, FP:9, TN:77, FN:0
+label type is regress!
+
+-----train data analysis:
+no drop:
+TP:656, FP:123, TN:902, FN:67
+drop 0.15:
+TP:295, FP:0, TN:329, FN:0

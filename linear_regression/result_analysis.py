@@ -37,38 +37,9 @@ def draw(y_pred, y_test, cur_stock_price_test, R2, i_month_label, save_path_perm
     plt.scatter(x, y_test, c='', marker='o', edgecolors='g')
     plt.savefig(save_path_permonth + 'y_scatter.png')
 
-# 3. confusion_matrix
 
 
-def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, save_path_permonth):
-    y_pred = np.array(y_pred).flatten()
-    y_true = np.array(y_true).flatten()
-    cur_stock_price_test = np.array(cur_stock_price_test).flatten()
-
-    TP, FP, TN, FN = 0, 0, 0, 0
-
-    for i in range(len(y_true)):
-        if '_predict_absvalue_price' in i_month_label:
-            assert(0)
-            y_true_case = y_true[i]-cur_stock_price_test[i]
-            y_pred_case = y_pred[i]-cur_stock_price_test[i]
-        elif '_predict_changerate_price' in i_month_label:
-            # assert(0)
-            y_true_case = y_true[i]
-            y_pred_case = y_pred[i]
-        # share prices are rising in y_true, also y_pred
-        if (y_true_case) >= 0 and (y_pred_case) >= 0:
-            TP += 1
-        # share prices are rising in y_pred, but falling in y_true
-        if (y_true_case) < 0 and (y_pred_case) >= 0:
-            FP += 1
-        # share prices are falling in y_true, also y_pred
-        if (y_true_case) < 0 and (y_pred_case) < 0:
-            TN += 1
-        # share prices are rising in y_true, but falling in y_pred
-        if (y_true_case) >= 0 and (y_pred_case) < 0:
-            FN += 1
-
+def draw_confusion_matrix(TP, FP, TN, FN, save_path_permonth):
     # [[TN|FP]
     # [FN|TP]]
     confusion_flag = np.array([['TN', 'FP'], ['FN', 'TP']])
@@ -83,6 +54,126 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, save_path_
             plt.xlabel('Predicted label')
     flag = 'demo_confusion_matrix.png'
     plt.savefig(save_path_permonth + flag)
+    return 
+
+# 3. confusion_matrix
+
+
+def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
+    y_pred = np.array(y_pred).flatten()
+    y_true = np.array(y_true).flatten()
+    cur_stock_price_test = np.array(cur_stock_price_test).flatten()
+
+    TP, FP, TN, FN = 0, 0, 0, 0
+    
+    T_small = 0
+    T_mid_positive = 0
+    T_big_positive = 0
+    T_mid_negative = 0
+    T_big_negative = 0
+    F_small = 0
+    F_mid_positive = 0
+    F_big_positive = 0
+    F_mid_negative = 0
+    F_big_negative = 0
+    T_positive = 0
+    T_negative = 0
+    F_positive = 0
+    F_negative = 0
+    for i in range(len(y_true)):
+        if '_predict_absvalue_price' in i_month_label:
+            assert(0)
+            y_true_case = y_true[i]-cur_stock_price_test[i]
+            y_pred_case = y_pred[i]-cur_stock_price_test[i]
+        elif '_predict_changerate_price' in i_month_label:
+            # assert(0)
+            y_true_case = y_true[i]
+            y_pred_case = y_pred[i]
+
+        if isinstance(y_true_case,str):
+            if y_pred_case == 'small':
+                if (y_true_case) == (y_pred_case) :
+                    T_small += 1
+                else:
+                    F_small +=1
+            elif y_pred_case == 'mid_positive':
+                if (y_true_case) == (y_pred_case) :
+                    T_mid_positive += 1
+                else:
+                    F_mid_positive +=1
+            elif y_pred_case == 'big_positive':
+                if (y_true_case) == (y_pred_case) :
+                    T_big_positive += 1
+                else:
+                    F_big_positive +=1
+            elif y_pred_case == 'mid_negative':
+                if (y_true_case) == (y_pred_case) :
+                    T_mid_negative += 1
+                else:
+                    F_mid_negative +=1
+            elif y_pred_case == 'big_negative':
+                if (y_true_case) == (y_pred_case) :
+                    T_big_negative += 1
+                else:
+                    F_big_negative +=1
+
+            if 'positive' in str(y_pred_case):
+                if 'positive' in str(y_true_case):
+                    T_positive += 1
+                else:
+                    F_positive += 1
+            elif 'negative' in str(y_pred_case):
+                if 'negative' in str(y_true_case):
+                    T_negative += 1
+                else:
+                    F_negative += 1
+        elif isinstance(y_true_case,float):
+            # share prices are rising in y_true, also y_pred
+            if (y_true_case) >= 0 and (y_pred_case) >= 0:
+                TP += 1
+            # share prices are rising in y_pred, but falling in y_true
+            if (y_true_case) < 0 and (y_pred_case) >= 0:
+                FP += 1
+            # share prices are falling in y_true, also y_pred
+            if (y_true_case) < 0 and (y_pred_case) < 0:
+                TN += 1
+            # share prices are rising in y_true, but falling in y_pred
+            if (y_true_case) >= 0 and (y_pred_case) < 0:
+                FN += 1
+
+    if isinstance(y_true_case,str):
+        try:
+            acc_small = (T_small)/(T_small+F_small)
+        except:
+            acc_small = 0 
+        
+        try:
+            acc_mid_positive = (T_mid_positive)/(T_mid_positive+F_mid_positive)
+        except:
+            acc_mid_positive = 0 
+        
+        try:
+            acc_big_positive = (T_big_positive)/(T_big_positive+F_big_positive)
+        except:
+            acc_big_positive = 0
+        
+        try:
+            acc_mid_negative = (T_mid_negative)/(T_mid_negative+F_mid_negative)
+        except:
+            acc_mid_negative = 0 
+        try:
+            acc_big_negative = (T_big_negative)/(T_big_negative+F_big_negative)
+        except:
+            acc_big_negative = 0
+        if T_positive+F_positive == 0:
+            acc_positive = 0
+        else:
+            acc_positive = (T_positive)/(T_positive+F_positive)
+        if T_negative+F_negative == 0:
+            acc_negative = 0
+        else:
+            acc_negative = (T_negative)/(T_negative+F_negative)
+        return acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative, acc_positive, acc_negative
 
     return TP, FP, TN, FN
 
