@@ -107,14 +107,12 @@ class Regress():
         if label_type == 'class':
             acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative, acc_positive, acc_negative = perf_measure(
                 y_pred, y_test, cur_stock_price_test, self.i_month_label)
-            print("label type is class!")
             print("acc_small:{}, acc_mid_positive:{}, acc_big_positive:{}, acc_mid_negative:{}, acc_big_negative:{}".format(acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative))
             print("acc_positive:{}, acc_negative:{}".format(acc_positive, acc_negative))
             return
         
-        print("label type is regress!")
         if data_type == 'test':
-            print("\n-----test data analysis:")
+            
             if self.drop_small_change_stock_fortest:
                 valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                     y_pred=y_pred, y_true=y_test, drop_ponit=self.test_drop_ponit, test_stock_id=y_testID)
@@ -150,7 +148,7 @@ class Regress():
                     print("stock_pred_correctness_df is a empty dataframe.")
                 print("TP:{}, FP:{}, TN:{}, FN:{}".format(TP, FP, TN, FN))
         elif data_type == 'train':
-            print("\n-----train data analysis:")
+            
             valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
                 y_pred=y_pred, y_true=y_test, drop_ponit=0.0, test_stock_id=y_testID)
 
@@ -275,10 +273,12 @@ class Regress():
         # 4.结果分析
         print("---------------------- result analysis ----------------------")
         # - test data analysis
+        print("\n-----test data analysis for {}:".format(label_type))
         self.result_analysis(y_pred, y_test, y_testID, label_type, cur_stock_price_test=y_test_['0_label'], data_type='test')
         # - train data analysis
         y_pred_fortrain = self.model.predict(x_train)
         y_test_fortrain = y_train
+        print("\n-----train data analysis for {}:".format(label_type))
         self.result_analysis(y_pred=y_pred_fortrain, y_test=y_test_fortrain, y_testID=y_trainID, label_type=label_type, cur_stock_price_test=None, data_type='train')
 
 if __name__ == '__main__':
@@ -376,7 +376,7 @@ if __name__ == '__main__':
     for i in range(n_month_predict):
         i_month_predict = i+1
         i_month_label = str(i_month_predict) + '_' + predict_mode
-        print("************************** {} : {} **************************".format(i_month_predict, i_month_label))
+        print("\n\n\n******************************** {} : {} ********************************".format(i_month_predict, i_month_label))
 
         save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
         if not os.path.exists(save_path_permonth):

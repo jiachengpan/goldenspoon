@@ -161,18 +161,22 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
             acc_mid_negative = (T_mid_negative)/(T_mid_negative+F_mid_negative)
         except:
             acc_mid_negative = 0 
+        
         try:
             acc_big_negative = (T_big_negative)/(T_big_negative+F_big_negative)
         except:
             acc_big_negative = 0
+
         if T_positive+F_positive == 0:
             acc_positive = 0
         else:
             acc_positive = (T_positive)/(T_positive+F_positive)
+
         if T_negative+F_negative == 0:
             acc_negative = 0
         else:
             acc_negative = (T_negative)/(T_negative+F_negative)
+
         return acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative, acc_positive, acc_negative
 
     return TP, FP, TN, FN

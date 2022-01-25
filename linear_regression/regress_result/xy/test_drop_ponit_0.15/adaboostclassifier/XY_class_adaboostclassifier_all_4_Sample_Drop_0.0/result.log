@@ -23,7 +23,10 @@ Index: []
 -----test_month_label: Empty DataFrame
 Columns: []
 Index: []
-************************** 1 : 1_predict_changerate_price **************************
+
+
+
+******************************** 1 : 1_predict_changerate_price ********************************
 ---------------------- data preprocess ----------------------
 train date: 2020-09-30
 train date: 2020-12-31
@@ -70,13 +73,18 @@ y_train: 0       big_negative
 1749    big_negative
 Name: 1_predict_changerate_price, Length: 1750, dtype: object
 ---------------------- result analysis ----------------------
-label type is class!
-acc_small:0.38636363636363635, acc_mid_positive:0.3142857142857143, acc_big_positive:0.09523809523809523, acc_mid_negative:0.2950310559006211, acc_big_negative:0.03773584905660377
-acc_positive:0.35714285714285715, acc_negative:0.3701578192252511
-label type is class!
-acc_small:0.7274549098196392, acc_mid_positive:0.6970802919708029, acc_big_positive:0.7717391304347826, acc_mid_negative:0.7793594306049823, acc_big_negative:0.8961038961038961
-acc_positive:0.8144104803493449, acc_negative:0.8360655737704918
-************************** 2 : 2_predict_changerate_price **************************
+
+-----test data analysis for class:
+acc_small:0.46938775510204084, acc_mid_positive:0.2702702702702703, acc_big_positive:0.2, acc_mid_negative:0.2957074721780604, acc_big_negative:0.05263157894736842
+acc_positive:0.3333333333333333, acc_negative:0.37026239067055394
+
+-----train data analysis for class:
+acc_small:0.7440860215053764, acc_mid_positive:0.7045454545454546, acc_big_positive:0.75, acc_mid_negative:0.7573770491803279, acc_big_negative:0.933649289099526
+acc_positive:0.8103448275862069, acc_negative:0.8246041412911084
+
+
+
+******************************** 2 : 2_predict_changerate_price ********************************
 ---------------------- data preprocess ----------------------
 train date: 2020-09-30
 train date: 2020-12-31
@@ -122,65 +130,25 @@ y_train: 0       big_negative
 1748    mid_negative
 1749    big_negative
 Name: 2_predict_changerate_price, Length: 1750, dtype: object
----------------------- result analysis ----------------------
-label type is class!/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:76: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='big_negative'
-/home/xiaoying/.local/lib/python3.7/site-packages/pandas/core/indexing.py:1732: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  self._setitem_single_block(indexer, value, name)
-/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:74: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='mid_negative'
+---------------------- result analysis ----------------------/home/xiaoying/.local/lib/python3.7/site-packages/sklearn/tree/_classes.py:631: RuntimeWarning: invalid value encountered in true_divide
+  return self.tree_.compute_feature_importances()
 /home/xiaoying/.local/lib/python3.7/site-packages/sklearn/tree/_classes.py:631: RuntimeWarning: invalid value encountered in true_divide
   return self.tree_.compute_feature_importances()
-/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:76: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='big_negative'
-/home/xiaoying/.local/lib/python3.7/site-packages/pandas/core/indexing.py:1732: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  self._setitem_single_block(indexer, value, name)
-/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:74: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='mid_negative'
-/home/xiaoying/.local/lib/python3.7/site-packages/sklearn/tree/_classes.py:631: RuntimeWarning: invalid value encountered in true_divide
-  return self.tree_.compute_feature_importances()
-/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:76: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='big_negative'
-/home/xiaoying/.local/lib/python3.7/site-packages/pandas/core/indexing.py:1732: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  self._setitem_single_block(indexer, value, name)
-/home/devdata/xiaoying.zhang/goldenspoon/goldenspoon/linear_regression/data_preprocess.py:74: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  temp_data[i]='mid_negative'
 /home/xiaoying/.local/lib/python3.7/site-packages/sklearn/tree/_classes.py:631: RuntimeWarning: invalid value encountered in true_divide
   return self.tree_.compute_feature_importances()
 
-acc_small:0.2936893203883495, acc_mid_positive:0.0, acc_big_positive:0.4358974358974359, acc_mid_negative:0.17142857142857143, acc_big_negative:0.15121951219512195
-acc_positive:0.5306122448979592, acc_negative:0.34210526315789475
-label type is class!
-acc_small:0.7690763052208835, acc_mid_positive:0.7142857142857143, acc_big_positive:0.7073170731707317, acc_mid_negative:0.7333333333333333, acc_big_negative:0.8860294117647058
-acc_positive:0.7834862385321101, acc_negative:0.8076379066478077
-************************** 3 : 3_predict_changerate_price **************************
+
+-----test data analysis for class:
+acc_small:0.3054892601431981, acc_mid_positive:0.1111111111111111, acc_big_positive:0.5142857142857142, acc_mid_negative:0.18333333333333332, acc_big_negative:0.13131313131313133
+acc_positive:0.5681818181818182, acc_negative:0.335978835978836
+
+-----train data analysis for class:
+acc_small:0.7632093933463796, acc_mid_positive:0.6995708154506438, acc_big_positive:0.7073170731707317, acc_mid_negative:0.7506172839506173, acc_big_negative:0.8864468864468864
+acc_positive:0.7754010695187166, acc_negative:0.8215339233038348
+
+
+
+******************************** 3 : 3_predict_changerate_price ********************************
 ---------------------- data preprocess ----------------------
 train date: 2020-09-30
 train date: 2020-12-31
@@ -227,9 +195,11 @@ y_train: 0       big_negative
 1749    mid_negative
 Name: 3_predict_changerate_price, Length: 1750, dtype: object
 ---------------------- result analysis ----------------------
-label type is class!
-acc_small:0.3374233128834356, acc_mid_positive:0.0, acc_big_positive:0.4230769230769231, acc_mid_negative:0.21485411140583555, acc_big_negative:0.11851851851851852
-acc_positive:0.45161290322580644, acc_negative:0.3168469860896445
-label type is class!
-acc_small:0.7128712871287128, acc_mid_positive:0.6653061224489796, acc_big_positive:0.7258064516129032, acc_mid_negative:0.7911832946635731, acc_big_negative:0.7888888888888889
-acc_positive:0.7423423423423423, acc_negative:0.8255372945638433
+
+-----test data analysis for class:
+acc_small:0.34591194968553457, acc_mid_positive:0.0, acc_big_positive:0.41935483870967744, acc_mid_negative:0.2086720867208672, acc_big_negative:0.11913357400722022
+acc_positive:0.4722222222222222, acc_negative:0.3142414860681115
+
+-----train data analysis for class:
+acc_small:0.7139303482587065, acc_mid_positive:0.6738197424892703, acc_big_positive:0.7536231884057971, acc_mid_negative:0.774617067833698, acc_big_negative:0.7722513089005235
+acc_positive:0.7642436149312377, acc_negative:0.8069129916567342

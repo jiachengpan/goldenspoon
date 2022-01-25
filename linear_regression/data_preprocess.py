@@ -62,7 +62,14 @@ class DataPreprocess():
         return X_df, Y_df, ID_df
 
     def label_classifier(self,numeric_data):
-        temp_data = numeric_data.iloc[:,2] ## NOTE TODO
+        flag = numeric_data.columns.str.endswith('_predict_changerate_price')
+        for i in range(len(flag)):
+            if flag[i]:
+                label_col = i
+            else:
+                assert("flag 'n_predict_changerate_price' not in numeric_data!")
+
+        temp_data = numeric_data.iloc[:,label_col].copy()
         for i in range (temp_data.shape[0]):
             if temp_data[i] >= 0.15:
                 temp_data[i]='big_positive'
@@ -74,7 +81,8 @@ class DataPreprocess():
                 temp_data[i]='mid_negative'    
             elif (temp_data[i] <= -0.15):
                 temp_data[i]='big_negative'   
-            numeric_data.iloc[i,1]=temp_data[i]
+            # numeric_data.iloc[i,1]=temp_data[i]
+            numeric_data.iloc[i,label_col]=temp_data[i]
         classified_data = numeric_data
         return classified_data
     
@@ -133,8 +141,8 @@ class DataPreprocess():
         if self.label_type == 'regress':
             return x_train, x_test, y_train, y_test, train_ID_df, test_ID_df,  None, None
         elif self.label_type == 'class':
-            y_train_regress = copy.deepcopy(y_train)
-            y_test_regress = copy.deepcopy(y_test) 
+            y_train_regress = y_train.copy() 
+            y_test_regress = y_test.copy() 
             y_train_classified = self.label_classifier(y_train)
             y_test_classified = self.label_classifier(y_test)
  
