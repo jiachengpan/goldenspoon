@@ -46,27 +46,75 @@ class Database:
     def get_stock_by_code(self, code):
         return self.stock_map[code]
 
-    @staticmethod
-    def compute_column_metadata(col):
+    k_report_mapping = {
+        '一季':         (3, 31),
+        '二季/中报':     (6, 30),
+        '三季':         (9, 30),
+        '年报':         (12, 31),
+    }
+
+    @classmethod
+    def convert_column(cls, col):
+        report_times = '|'.join(cls.k_report_mapping.keys())
+        re_unit = re.compile('(.*)(\([元,%]\))$')
+        k_param_map = {
+            '报告期':   re.compile(f'\d{{4}}年({report_times})'),
+            '交易日期': re.compile(f'\d{{4}}-\d{{1,2}}-\d{{1,2}}'),
+            '复权方式': re.compile(f'不复权'),
+            '名次1':    re.compile(f'第\d{{1,2}}名'),
+            '股本类型': re.compile(f'流通股本'),
+            '报告期净值数据项': re.compile(f'过去\d{{1,2}}个月'),
+            '比例类型': re.compile(f'占流通股比例'),
+            '起始交易日期': re.compile(f'截止日\d{{1,2}}月前'),
+        }
+
+        unit = None
+        name = None
+        params = []
+
+        for tok in col.split():
+            is_param = False
+            for param_name, param_value in k_param_map.items():
+                m = param_value.match(tok)
+                if m:
+                    params.append(f'[{param_name}]{tok}')
+                    is_param = True
+                    break
+            if is_param:
+                continue
+
+            assert name is None, f'{col} - name is not none: {name}'
+
+            m = re_unit.match(tok)
+            if m:
+                name, unit = m.groups()
+                unit = f'[单位]{unit}'
+            else:
+                name = tok
+
+        fields = [name] + params
+        if unit is not None:
+            fields.append(unit)
+
+        print(f'col: {col} -> {fields}')
+
+        return ' '.join(fields)
+
+    @classmethod
+    def compute_column_metadata(cls, col):
         re_report_timestamp = re.compile('.报告期.(\d{4})年(.*)')
         re_trans_timestamp = re.compile('.*日期..*(\d{4})-(\d{2})-(\d{2})')
         re_topn_name = re.compile('.名次.*第(\d+)名')
         re_meta_name = re.compile('\[([^]]+)\](\S+)')
 
-        k_report_mapping = {
-            '一季':         (3, 31),
-            '二季/中报':     (6, 30),
-            '三季':         (9, 30),
-            '年报':         (12, 31),
-        }
-
         tokens = []
         metadata = {}
+        #print('tokens:', col.split())
         for tok in col.split():
             m = re_report_timestamp.match(tok)
             if m:
                 year, rpt = m.groups()
-                month, day = k_report_mapping[rpt]
+                month, day = cls.k_report_mapping[rpt]
                 assert 'date' not in metadata
                 metadata['date'] = datetime.date(int(year), month, day)
                 continue
@@ -94,6 +142,7 @@ class Database:
             tokens.append(tok)
 
         metadata['name'] = '_'.join(tokens)
+        #print('metadata:', metadata)
         return metadata
 
     def load_files(self):
@@ -102,10 +151,14 @@ class Database:
 
         self.raw_data = {}
         for filename in glob.glob(os.path.join(self.k_path, '*.xls*'), recursive=True):
-            print('loading {}'.format(filename))
+            #print('loading {}'.format(filename))
             df = pd.read_excel(filename)
             df = df.replace('——', np.nan)
             df.columns = [' '.join(col.split()) for col in df.columns]
+
+            if filename.endswith('.xlsx'):
+                df.columns = [self.convert_column(c) for c in df.columns]
+
             self.raw_data[os.path.basename(filename)] = df
 
     def index_data(self):
@@ -153,6 +206,7 @@ class Database:
         for col in df.columns:
             if col in self.k_key_columns:
                 continue
+
             columns_metadata[col] = self.compute_column_metadata(col)
 
         for _, row in df.iterrows():

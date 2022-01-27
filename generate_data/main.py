@@ -15,6 +15,7 @@ args = argparser.parse_args()
 
 end_date = parser.parse(args.end_date)
 db = data_utils.Database('data')
+
 regress_dir = args.regress_dir
 past_quater_number = args.past_quater_number
 if not os.path.exists(regress_dir):

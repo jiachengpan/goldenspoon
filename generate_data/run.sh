@@ -12,7 +12,7 @@ dates="
        "
 
 [[ -z $past_quarters ]] && past_quarters=4
-[[ -z $output_dir ]]    && output_dir="../linear_regression/regress_data/past_quater_${past_quater_number}/"
+[[ -z $output_dir ]]    && output_dir="../linear_regression/regress_data/past_quater_${past_quaters}/"
 
 mkdir -p $output_dir
 
