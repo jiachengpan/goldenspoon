@@ -8,7 +8,7 @@ from . import utils
 from .index import GenericDateIndex, GenericNameIndex, TopNStocksIndex
 
 
-class Database:
+class Database_DELETE:
     k_key_columns = (
         '证券代码',
         '证券名称',
@@ -60,7 +60,7 @@ class Database:
         k_param_map = {
             '报告期':   re.compile(f'\d{{4}}年({report_times})'),
             '交易日期': re.compile(f'\d{{4}}-\d{{1,2}}-\d{{1,2}}'),
-            '复权方式': re.compile(f'不复权'),
+            '复权方式': re.compile(f'前复权'),
             '名次1':    re.compile(f'第\d{{1,2}}名'),
             '股本类型': re.compile(f'流通股本'),
             '报告期净值数据项': re.compile(f'过去\d{{1,2}}个月'),

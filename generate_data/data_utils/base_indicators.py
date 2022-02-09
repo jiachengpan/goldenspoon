@@ -19,19 +19,19 @@ class Indicator:
     k_stock_column_code = '股票代码'
     k_stock_column_industry = '所属中证行业(2016) [行业类别]{level}级'
     k_stock_column_type = '股票风格分类'
-    k_stock_column_total_value = '区间日均总市值 [起始交易日期]截止日3月前 [单位]亿元'
-    k_stock_column_avg_price = '当月成交均价 [复权方式]不复权'
-    k_stock_column_close_price = '月收盘价 [复权方式]不复权'
+    k_stock_column_total_value = '区间日均总市值 [起始交易日期]截止日3月前 [单位]元'
+    k_stock_column_avg_price = '当月成交均价 [复权方式]前复权'
+    k_stock_column_close_price = '月收盘价 [复权方式]前复权'
     k_stock_column_turnover_rate = '月换手率 [单位]%'
     k_stock_column_amplitutde = '月振幅 [单位]%'
-    k_stock_column_margin_diff = '融资融券差额 [单位]元'
+    k_stock_column_margin_diff = '融资融券差额'
     k_stock_column_share_ratio_of_funds = '基金持股比例 [单位]% [比例类型]占流通股比例'
     k_stock_column_share_number_of_funds = '基金持股数量 [单位]股'
     k_stock_column_num_of_funds = '持股基金家数 [股本类型]流通股本'
 
     k_stock_exclude_timed_columns = [
         '市盈率(PE,TTM)',
-        '所属概念板块',
+        #'所属概念板块',
         '流通股本 [单位]股',
         '股票规模指标',
         '股票风格分类',
@@ -103,7 +103,7 @@ class Indicator:
         stocks_untimed = self.db.get_stocks()[untimed_columns]
         stocks_timed = self.get_stocks_timed()[timed_columns].dropna() \
             .sort_values(self.k_column_date, ascending=False) \
-            .groupby([self.k_column_date, self.k_stock_column_code]) \
+            .groupby([self.k_stock_column_code]) \
             .last()
         return pd.merge(stocks_untimed, stocks_timed, on=self.k_stock_column_code).dropna()
 
@@ -200,8 +200,8 @@ class Indicator:
         funds_untimed = self.db.get_funds()[untimed_columns]
         funds_timed = self.get_funds_timed()[timed_columns].dropna() \
             .sort_values(self.k_column_date, ascending=False) \
-            .groupby([self.k_column_date, self.k_fund_column_code]) \
-            .last().reset_index()
+            .groupby([self.k_fund_column_code]) \
+            .last()
 
         return pd.merge(funds_untimed, funds_timed, on=self.k_fund_column_code).dropna()
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-from data_utils import Database, Indicator
+from data_utils import Indicator
 import os
 import sys
 import pandas as pd
@@ -38,6 +38,7 @@ class stocks_dynamic_indicators():
         self.ind_stocks_perf_with_fund = ind_stocks_perf_with_fund
 
     def q_quater_mean_std(self, perf_metric, df_func):
+        print(f'DBG: q_quarter_mean_std: {perf_metric}')
         stock_id_list = []
         change_mean_list = []
         change_std_list = []
@@ -47,7 +48,7 @@ class stocks_dynamic_indicators():
         for industry in firstindustry_count.keys():
             industry_stocks_general = self.ind_stocks_general.loc[
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
-            industry_stock_id = industry_stocks_general['股票代码']
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
 
             change = []
             for stock_id in industry_stock_id:
@@ -75,6 +76,7 @@ class stocks_dynamic_indicators():
 
     # mean std function for stock fund affinity
     def q_quater_fund_owner_affinity_mean_std(self, perf_metric):
+        print(f'DBG: fund owner revisit: {perf_metric}')
         stock_id_list = []
         change_mean_list = []
         change_std_list = []
@@ -85,7 +87,7 @@ class stocks_dynamic_indicators():
         for industry in firstindustry_count.keys():
             industry_stocks_general = self.ind_stocks_general.loc[
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
-            industry_stock_id = industry_stocks_general['股票代码']
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
 
             for stock_id in industry_stock_id:
                 ind_stocks_perf_with_fund_temp = (
@@ -109,18 +111,24 @@ class stocks_dynamic_indicators():
                             fund_owner_sample.shape[0]
                         stock_quater_fund_owner_affinity.append(
                             quater_fund_owner_affinity)
-                stock_quater_fund_owner_affinity = np.asarray(
-                    stock_quater_fund_owner_affinity)
-                change_mean = stock_quater_fund_owner_affinity.mean()
-                change_std = stock_quater_fund_owner_affinity.std()
+
+                if len(stock_quater_fund_owner_affinity) > 0:
+                    stock_quater_fund_owner_affinity = np.asarray(stock_quater_fund_owner_affinity)
+                    change_mean = stock_quater_fund_owner_affinity.mean()
+                    change_std  = stock_quater_fund_owner_affinity.std()
+                else:
+                    change_mean = 0
+                    change_std  = 0
 
                 stock_id_list.append(stock_id)
                 change_mean_list.append(change_mean)
                 change_std_list.append(change_std)
+
         return stock_id_list, change_mean_list, change_std_list
 
     # mean function for stock fund revisit
     def q_quater_fund_revisit_mean(self, perf_metric):
+        print(f'DBG: fund revisit: {perf_metric}')
         stock_id_list = []
         change_mean_list = []
 
@@ -130,7 +138,7 @@ class stocks_dynamic_indicators():
         for industry in firstindustry_count.keys():
             industry_stocks_general = self.ind_stocks_general.loc[
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
-            industry_stock_id = industry_stocks_general['股票代码']
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
             revisit_ratio = []
             for stock_id in industry_stock_id:
                 ind_stocks_perf_with_fund_temp = (
@@ -172,7 +180,7 @@ class stocks_dynamic_indicators():
         for industry in secondindustry_count.keys():
             industry_stocks_general = self.ind_stocks_general.loc[
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]2级'] == industry]
-            industry_stock_id = industry_stocks_general['股票代码']
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
             cyclical_insdustry = []
             for stock_id in industry_stock_id:
                 if industry in cyclical_industry_keys:
@@ -238,7 +246,7 @@ class stocks_industry_dynamic_indicators():
         for industry in firstindustry_count.keys():
             industry_stocks_general = self.ind_stocks_general.loc[
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
-            industry_stock_id = industry_stocks_general['股票代码']
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
 
             industry_stock_id_list = []
             change_mean_list = []
@@ -303,13 +311,14 @@ def get_stocks_industry_static_indicators(ind_stocks_general_new):
 
 
 def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share):
+    print('DBG: get_stocks_industry_dynamic_indicators')
     # past_quater_number = 3
     stocks_industry_dynamic = stocks_industry_dynamic_indicators(
         ind_stocks_general, past_quater_number)
 
     # a. Average rate of change and standard deviation of Stock Price over the past N quarters
     avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_industry_dynamic.q_quater_mean_std(
-        '区间日均总市值 [起始交易日期]截止日3月前 [单位]亿元', ind_stocks_perf)
+        '区间日均总市值 [起始交易日期]截止日3月前 [单位]元', ind_stocks_perf)
     # b. Average rate of change and standard deviation of Total Fund Shareholding over the past N quarters
     fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std = stocks_industry_dynamic.q_quater_mean_std(
         '基金持股总值', ind_stocks_perf_holding_funds_share)
@@ -339,15 +348,15 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
         ind_stocks_general, ind_stocks_perf, ind_stocks_perf_with_fund, past_quater_number, minimal_fund_number)
 
     close_price_stock_id_list, close_price_mean, close_price_std = stocks_dynamic.q_quater_mean_std(
-        '月收盘价 [复权方式]不复权', ind_stocks_perf)  # data base:ind_stocks_perf
+        '月收盘价 [复权方式]前复权', ind_stocks_perf)  # data base:ind_stocks_perf
     avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_dynamic.q_quater_mean_std(
-        '当月成交均价 [复权方式]不复权', ind_stocks_perf)  # data base:ind_stocks_perf
+        '当月成交均价 [复权方式]前复权', ind_stocks_perf)  # data base:ind_stocks_perf
     turnover_rate_stock_id_list, turnover_rate_mean, turnover_rate_std = stocks_dynamic.q_quater_mean_std(
         '月换手率 [单位]%', ind_stocks_perf)  # data base:ind_stocks_perf
     amplitutde_stock_id_list, amplitutde_mean, amplitutde_std = stocks_dynamic.q_quater_mean_std(
         '月振幅 [单位]%', ind_stocks_perf)  # data base:ind_stocks_perf
     margin_diff_stock_id_list, margin_diff_mean, margin_diff_std = stocks_dynamic.q_quater_mean_std(
-        '融资融券差额 [单位]元', ind_stocks_perf)  # data base:ind_stocks_perf
+        '融资融券差额', ind_stocks_perf)  # data base:ind_stocks_perf
     share_ratio_of_funds_stock_id_list, share_ratio_of_funds_mean, share_ratio_of_funds_std = stocks_dynamic.q_quater_mean_std(
         '基金持股比例 [单位]% [比例类型]占流通股比例', ind_stocks_holding_funds_share)  # data base: ind_stocks_holding_funds_share
     num_of_funds_stock_id_list, num_of_funds_mean, num_of_funds_std = stocks_dynamic.q_quater_mean_std(
@@ -417,8 +426,8 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_general = ind.get_stock_general()
     ind_stocks_perf = ind.get_stock_performance()
     ind_stocks_holding_funds_share = ind.get_stock_holding_funds_share()
-    ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
-    ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
+    #ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
+    #ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
 
     # ## Fund Indicators
     print('fund indicators')
@@ -449,7 +458,7 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_perf_holding_funds_share = pd.merge(
         ind_stocks_perf, ind_stocks_holding_funds_share, how='outer', on=['日期', '股票代码'])
     ind_stocks_perf_holding_funds_share['基金持股总值'] = ind_stocks_perf_holding_funds_share['基金持股数量 [单位]股'] * \
-        ind_stocks_perf_holding_funds_share['月收盘价 [复权方式]不复权']
+        ind_stocks_perf_holding_funds_share['月收盘价 [复权方式]前复权']
     # NOTE drop nan data by '基金持股总值'
     ind_stocks_perf_holding_funds_share.dropna(subset=['基金持股总值'], inplace=True)
 
@@ -457,7 +466,16 @@ def compute_indicators(ind, end_date, past_quater_number_):
     # for class stocks_dynamic_indicators jy
     # for fund info mapping to stock jy
     funds_topn_stocks = ind.get_funds_topn_stocks().reset_index()
-    funds_topn_stocks.columns = ['日期', '基金代码', '股票名称', '仓股持仓占流通股比例', '重仓股股票市值']
+    funds_topn_stocks.columns = [
+        '日期', '基金代码', '股票名称',
+        '季度持仓变动(万股)',
+        '持股占总股本比(%)',
+        '持股占流通股比(%)', # '重仓股持仓占流通股比例',
+        '持股市值占基金净值比(%)',
+        '持股市值占基金股票投资市值比(%)',
+        '持股总市值(万元)', # '重仓股股票市值',
+        '持股数量(万股)',
+        ]
     new_df = pd.merge(ind_stocks_perf, funds_topn_stocks,
                       how='outer', on=['日期', '股票名称'])
     ind_stocks_perf_with_fund = pd.merge(
@@ -509,14 +527,3 @@ def merge_dfs(dfs):
     for df in dfs:
         df_final = df_final.merge(df, on=['id'], how='outer')
     return df_final
-
-
-# main func
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------
-if __name__ == "__main__":
-    try:
-        db = Database('data')
-        database = compute_indicators(Indicator(db))
-        print("final database:", database)
-    except Exception as e:
-        raise e
