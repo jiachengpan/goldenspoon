@@ -24,6 +24,11 @@ for end_date in $dates; do
     -ed $end_date \
     --output ${output_dir} \
     --past-quarters $past_quarters &
+
+  if [[ -z $first ]]; then
+    wait
+    first=1
+  fi
 done
 
 wait
