@@ -14,21 +14,20 @@ dates="
        2021-12-31
        "
 
-[[ -z $past_quarters ]] && past_quarters=4
-[[ -z $output_dir ]]    && output_dir="data/past_quarters_${past_quarters}/"
+[[ -z $past_quarters ]]   && past_quarters=4
+[[ -z $output_dir ]]      && output_dir="data/past_quarters_${past_quarters}/"
+[[ -z $value_threshold ]] && value_threshold=1e9
 
 mkdir -p $output_dir
+mkdir -p logs
 
 for end_date in $dates; do
   python -u generate_data.py \
     -ed $end_date \
     --output ${output_dir} \
-    --past-quarters $past_quarters &
-
-  if [[ -z $first ]]; then
-    wait
-    first=1
-  fi
+    --value-threshold ${value_threshold} \
+    --past-quarters ${past_quarters} \
+    | tee logs/gen.end_date.${end_date}.run.$(date -Idate).log &
 done
 
 wait

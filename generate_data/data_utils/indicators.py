@@ -236,6 +236,7 @@ class stocks_industry_dynamic_indicators():
         self.ind_stocks_general = ind_stocks_general
 
     def q_quater_mean_std(self, perf_metric, df_func):
+        print(f'DBG: q_quarter_mean_std: {perf_metric}')
         stock_id_list = []
         industry_change_mean_list = []
         industry_change_std_list = []
@@ -356,7 +357,7 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
     amplitutde_stock_id_list, amplitutde_mean, amplitutde_std = stocks_dynamic.q_quater_mean_std(
         '月振幅 [单位]%', ind_stocks_perf)  # data base:ind_stocks_perf
     margin_diff_stock_id_list, margin_diff_mean, margin_diff_std = stocks_dynamic.q_quater_mean_std(
-        '融资融券差额', ind_stocks_perf)  # data base:ind_stocks_perf
+        '融资融券差额 [单位]元', ind_stocks_perf)  # data base:ind_stocks_perf
     share_ratio_of_funds_stock_id_list, share_ratio_of_funds_mean, share_ratio_of_funds_std = stocks_dynamic.q_quater_mean_std(
         '基金持股比例 [单位]% [比例类型]占流通股比例', ind_stocks_holding_funds_share)  # data base: ind_stocks_holding_funds_share
     num_of_funds_stock_id_list, num_of_funds_mean, num_of_funds_std = stocks_dynamic.q_quater_mean_std(
@@ -428,6 +429,9 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_holding_funds_share = ind.get_stock_holding_funds_share()
     #ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
     #ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
+
+    print(f'DBG: ind_stocks_perf.shape: {ind_stocks_perf.shape}')
+    print(f'DBG: ind_stocks_general.shape: {ind_stocks_general.shape}')
 
     # ## Fund Indicators
     print('fund indicators')

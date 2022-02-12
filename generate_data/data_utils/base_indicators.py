@@ -24,7 +24,7 @@ class Indicator:
     k_stock_column_close_price = '月收盘价 [复权方式]前复权'
     k_stock_column_turnover_rate = '月换手率 [单位]%'
     k_stock_column_amplitutde = '月振幅 [单位]%'
-    k_stock_column_margin_diff = '融资融券差额'
+    k_stock_column_margin_diff = '融资融券差额 [单位]元'
     k_stock_column_share_ratio_of_funds = '基金持股比例 [单位]% [比例类型]占流通股比例'
     k_stock_column_share_number_of_funds = '基金持股数量 [单位]股'
     k_stock_column_num_of_funds = '持股基金家数 [股本类型]流通股本'
@@ -104,7 +104,8 @@ class Indicator:
         stocks_timed = self.get_stocks_timed()[timed_columns].dropna() \
             .sort_values(self.k_column_date, ascending=False) \
             .groupby([self.k_stock_column_code]) \
-            .last()
+            .last() \
+            .drop(columns=[self.k_column_date])
         return pd.merge(stocks_untimed, stocks_timed, on=self.k_stock_column_code).dropna()
 
     def get_stock_performance(self):
@@ -117,7 +118,7 @@ class Indicator:
                    self.k_stock_column_amplitutde,
                    self.k_stock_column_margin_diff,
                    ]
-        stocks_timed = self.get_stocks_timed()[columns].dropna()
+        stocks_timed = self.get_stocks_timed()[columns]
         return self.add_stock_name(stocks_timed).dropna()
 
     def get_stock_holding_funds_share(self):
@@ -200,8 +201,8 @@ class Indicator:
         funds_untimed = self.db.get_funds()[untimed_columns]
         funds_timed = self.get_funds_timed()[timed_columns].dropna() \
             .sort_values(self.k_column_date, ascending=False) \
-            .groupby([self.k_fund_column_code]) \
-            .last()
+            .groupby([self.k_column_date, self.k_fund_column_code]) \
+            .last().reset_index()
 
         return pd.merge(funds_untimed, funds_timed, on=self.k_fund_column_code).dropna()
 

@@ -50,7 +50,10 @@ class Dataset:
 
         df_topn_stocks = \
             self.preprocess(self.indexed_data[('fund_id',  'fund_name', 'time', 'stock_id', 'stock_name')].reset_index())
-        df_topn_stocks = df_topn_stocks.melt(id_vars=df_topn_stocks.columns.tolist()[:5])
+        df_topn_stocks = df_topn_stocks.melt(
+            id_vars=df_topn_stocks.columns.tolist()[:5],
+            var_name='indicator',
+            value_name='value')
         self.fund_stats['topn_stocks'] = df_topn_stocks
 
         return

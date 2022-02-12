@@ -1,43 +1,33 @@
-from cProfile import label
 import os
-import requests
-import json
-import pickle
+import glob
 import calendar
 import datetime
+import pandas as pd
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 
 import data_utils
 
-k_dataset_url = 'https://api.github.com/repos/jiachengpan/eastmoney_dataset/releases/latest'
+k_index = ['time',
+           'stock_id',
+           'stock_name',
+           'fund_id',
+           'fund_name',
+            ]
 
-def download_and_pickle_assets(url, files = ['raw_data.pkl']):
-    res = requests.get(url)
-    data = json.loads(res.text)
-
-    os.makedirs('downloads', exist_ok=True)
-
+def collect_raw_data(path):
     result = []
-    for asset in data['assets']:
-        if asset['name'] not in files:
-            continue
-
-        filename = f"downloads/{asset['name']}"
-        if not os.path.isfile(filename):
-            print(f"downloading {asset['name']} from {asset['browser_download_url']}")
-            url = asset['browser_download_url']
-            ret = os.system(f"wget {url} -O {filename}")
-            assert ret == 0, 'download failed'
-
-        result.append(pickle.load(open(filename, 'rb')))
-
+    for filename in glob.glob(os.path.join(path, '*.csv.gz')):
+        df = pd.read_csv(filename)
+        index = [i for i in df.columns if i in k_index]
+        if 'time' in index:
+            df['time'] = pd.to_datetime(df['time']).dt.date
+        result.append(df.set_index(index))
     return result
 
 def main(args):
     try:
-        assets = download_and_pickle_assets(args.url, args.files)
-        dfs = [df for asset in assets for df in asset.values()]
+        dfs = collect_raw_data(args.path)
 
         if args.verbose:
             for df in dfs:
@@ -54,9 +44,22 @@ def main(args):
         end_date   = parser.parse(args.end_date)
         start_date = parser.parse(args.start_date) if args.start_date is not None else \
                                  (end_date + relativedelta(months=-12))
+
+        print(f'DBG: preparing data with end: {end_date} start: {start_date}')
         ind = data_utils.Indicator(ds,
                                     start_date = start_date.date().isoformat(),
                                     end_date   = end_date.date().isoformat())
+
+        os.makedirs(args.output, exist_ok=True)
+        ind.get_stock_general().sort_values('股票代码') \
+                .reset_index(drop=True) \
+                .to_csv(f'{args.output}/stock_general.csv')
+        ind.get_stock_performance().sort_values('股票代码') \
+                .reset_index(drop=True) \
+                .to_csv(f'{args.output}/stock_perf.csv')
+        ind.get_stock_holding_funds_share().sort_values(['股票代码', '日期']) \
+                .reset_index(drop=True) \
+                .to_csv(f'{args.output}/stock_holding_funds.csv')
 
         # compute indicators
         indicators = data_utils.compute_indicators(ind, end_date.date().isoformat(), args.past_quarters)
@@ -67,16 +70,18 @@ def main(args):
             k_exclude_filter_columns = ['id', '成长型', '混合型', '价值型', '小盘股', '中盘股', '大盘股']
             filter_columns = [c for c in indicators.columns if c not in k_exclude_filter_columns]
             for col in filter_columns:
-                print(f'DBG: filtering on {col}')
-                print(indicators[col].describe())
+                describe = indicators[col].describe()
                 old_shape = indicators.shape
                 indicators = indicators[indicators[col] <= args.value_threshold]
                 new_shape = indicators.shape
-                print(f'DBG: {old_shape} -> {new_shape}')
 
-        indicators = indicators.fillna(0.0)
+                print(f'DBG: filtering on {col} value: {args.value_threshold}')
+                print(f'DBG: {old_shape} -> {new_shape}')
+                print(describe)
+                print(f'-' * 20)
 
         print("DBG: indicators.describe: {}".format(indicators.describe()))
+        indicators = indicators.fillna(0.0)
 
         os.makedirs(args.output, exist_ok=True)
         indicators.to_pickle(f'{args.output}/indicators.{end_date.date().isoformat()}.pickle')
@@ -127,9 +132,8 @@ if __name__ == '__main__':
     import argparse
 
     argparser = argparse.ArgumentParser(description='generate dataset')
-    argparser.add_argument('--url',                default=k_dataset_url, type=str,                help='url')
-    argparser.add_argument('--files',              default=['raw_data.pkl'], type=str, nargs='+',  help='files to download')
-    argparser.add_argument('--verbose',            default=False, action='store_true',             help='verbose')
+    argparser.add_argument('--path',               default='raw_data', type=str,        help='path')
+    argparser.add_argument('--verbose',            default=False, action='store_true',  help='verbose')
     argparser.add_argument('--start-date', '-sd',  default=None)
     argparser.add_argument('--end-date', '-ed',    default='2021-09-30')
     argparser.add_argument('--past-quarters',      default=4, type=int)
