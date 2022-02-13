@@ -1,5 +1,6 @@
 import pandas as pd
 import copy
+import os
 
 class DataPreprocess():
     def __init__(self, data_path, train_date_list, test_date_list, n_month_predict, i_month_label, indicator_list, label_type):
@@ -78,28 +79,27 @@ class DataPreprocess():
             elif (temp_data[i] < 0.05) and (temp_data[i]> -0.05):
                 temp_data[i]='small'
             elif (temp_data[i] <= -0.05) and (temp_data[i]> -0.15):
-                temp_data[i]='mid_negative'    
+                temp_data[i]='mid_negative'
             elif (temp_data[i] <= -0.15):
-                temp_data[i]='big_negative'   
+                temp_data[i]='big_negative'
             # numeric_data.iloc[i,1]=temp_data[i]
             numeric_data.iloc[i,label_col]=temp_data[i]
         classified_data = numeric_data
         return classified_data
-    
+
     def run(self):
         totaldate_X_df = pd.DataFrame()
         totaldate_Y_df = pd.DataFrame()
         totaldate_ID_df = pd.DataFrame()
         for date in self.train_date_list:
             print("train date:", date)
-            indicator_pickle = self.data_path + 'indicators.' + date + '.pickle'
+            indicator_pickle = os.path.join(self.data_path, f'indicators.{date}.pickle')
             df_indicator = pd.read_pickle(indicator_pickle)
             self.all_indicator_list = list(df_indicator.columns.values)[1:]
             if not df_indicator.empty:
                 label_pickle_list = []
                 for m in range(self.n_month_predict+1):  # include 0_month
-                    label_pickle = self.data_path + 'labels.' + \
-                        str(m) + '_month.' + date + '.pickle'
+                    label_pickle = os.path.join(self.data_path, f'labels.{m}_month.{date}.pickle')
                     label_pickle_list.append(label_pickle)
                 df_indicator_label = self.merge_indicator_label(
                     df_indicator, label_pickle_list)
@@ -120,14 +120,13 @@ class DataPreprocess():
 
         for date in self.test_date_list:
             print("test date:", date)
-            indicator_pickle = self.data_path + 'indicators.' + date + '.pickle'
+            indicator_pickle = os.path.join(self.data_path, f'indicators.{date}.pickle')
             df_indicator = pd.read_pickle(indicator_pickle)
             self.all_indicator_list = list(df_indicator.columns.values)[1:]
             if not df_indicator.empty:
                 label_pickle_list = []
                 for m in range(self.n_month_predict+1):  # include 0_month
-                    label_pickle = self.data_path + 'labels.' + \
-                        str(m) + '_month.' + date + '.pickle'
+                    label_pickle = os.path.join(self.data_path, f'labels.{m}_month.{date}.pickle')
                     label_pickle_list.append(label_pickle)
                 df_indicator_label = self.merge_indicator_label(
                     df_indicator, label_pickle_list)
@@ -141,13 +140,12 @@ class DataPreprocess():
         if self.label_type == 'regress':
             return x_train, x_test, y_train, y_test, train_ID_df, test_ID_df,  None, None
         elif self.label_type == 'class':
-            y_train_regress = y_train.copy() 
-            y_test_regress = y_test.copy() 
+            y_train_regress = y_train.copy()
+            y_test_regress = y_test.copy()
             y_train_classified = self.label_classifier(y_train)
             y_test_classified = self.label_classifier(y_test)
- 
+
             return x_train, x_test, y_train_classified, y_test_classified, train_ID_df, test_ID_df,  y_train_regress,y_test_regress
         else:
             assert("label type error!")
-        
-        
+

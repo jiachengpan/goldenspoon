@@ -1,3 +1,4 @@
 *.pickle
 *.pkl
 *.log
+*.csv
