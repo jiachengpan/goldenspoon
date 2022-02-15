@@ -99,8 +99,14 @@ class DataSet:
             df = pd.read_pickle(pickle_name)
 
             unique_dates = df['日期'].unique()
-            assert len(unique_dates) == 1, f'invalid dates: {unique_dates}'
-            unique_date = unique_dates[0]
+            if len(unique_dates) == 1:
+                unique_date = unique_dates[0]
+            else:
+                print(f'ERROR: month: {month} invalid dates: {unique_dates}')
+                from dateutil import parser
+                from dateutil import relativedelta
+                unique_date = parser.parse(date).date() + relativedelta.relativedelta(months=month)
+                df['日期'] = unique_date
 
             df = df[['月收盘价 [复权方式]前复权']]
             df.columns = pd.MultiIndex.from_product([['close'], [unique_date]])
