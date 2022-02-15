@@ -470,16 +470,27 @@ def compute_indicators(ind, end_date, past_quater_number_):
     # for class stocks_dynamic_indicators jy
     # for fund info mapping to stock jy
     funds_topn_stocks = ind.get_funds_topn_stocks().reset_index()
-    funds_topn_stocks.columns = [
-        '日期', '基金代码', '股票名称',
-        '季度持仓变动(万股)',
-        '持股占总股本比(%)',
-        '持股占流通股比(%)', # '重仓股持仓占流通股比例',
-        '持股市值占基金净值比(%)',
-        '持股市值占基金股票投资市值比(%)',
-        '持股总市值(万元)', # '重仓股股票市值',
-        '持股数量(万股)',
-        ]
+    # XXX: this is for supporting old data schema and the new. new has 10 columns while old has 5
+    if len(funds_topn_stocks.columns) == 10:
+        funds_topn_stocks.columns = [
+            '日期', '基金代码', '股票名称',
+            '季度持仓变动(万股)',
+            '持股占总股本比(%)',
+            '持股占流通股比(%)', # '重仓股持仓占流通股比例',
+            '持股市值占基金净值比(%)',
+            '持股市值占基金股票投资市值比(%)',
+            '持股总市值(万元)', # '重仓股股票市值',
+            '持股数量(万股)',
+            ]
+    elif len(funds_topn_stocks.columns) == 5:
+        funds_topn_stocks.columns = [
+            '日期', '基金代码', '股票名称',
+            '持股占流通股比(%)', # '重仓股持仓占流通股比例',
+            '持股总市值(万元)', # '重仓股股票市值',
+            ]
+    else:
+        assert False, f'invalid funds_topn_stocks.columns: {funds_topn_stocks.columns}'
+
     new_df = pd.merge(ind_stocks_perf, funds_topn_stocks,
                       how='outer', on=['日期', '股票名称'])
     ind_stocks_perf_with_fund = pd.merge(

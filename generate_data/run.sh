@@ -17,12 +17,14 @@ dates="
 [[ -z $past_quarters ]]   && past_quarters=4
 [[ -z $output_dir ]]      && output_dir="data/past_quarters_${past_quarters}/"
 [[ -z $value_threshold ]] && value_threshold=1e9
+[[ -z $data_path ]]       && data_path=raw_data
 
 mkdir -p $output_dir
 mkdir -p logs
 
 for end_date in $dates; do
   python -u generate_data.py \
+    --path $data_path \
     -ed $end_date \
     --output ${output_dir} \
     --value-threshold ${value_threshold} \
