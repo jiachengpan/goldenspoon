@@ -117,12 +117,21 @@ def main(args):
                 .groupby(data_utils.Indicator.k_stock_column_code)[label_columns] \
                 .last()
 
-            labels['close_price_diff_ratio'] = \
-                labels[data_utils.Indicator.k_stock_column_close_price] / \
-                labels_baseline[data_utils.Indicator.k_stock_column_close_price] - 1
+            if args.label_for_priormonth and i>0:
+                assert(0)
+                local_labels = labels[data_utils.Indicator.k_stock_column_close_price]
+            else:
+                local_labels = labels[data_utils.Indicator.k_stock_column_close_price]
+                pre_labels = labels_baseline[data_utils.Indicator.k_stock_column_close_price]
+
+            labels['close_price_diff_ratio'] = local_labels / pre_labels - 1
 
             labels.dropna(inplace=True)
             labels.to_pickle(f'{args.output}/labels.{i+1}_month.{end_date.date().isoformat()}.pickle')
+
+            if args.label_for_priormonth:
+                assert(0)
+                pre_labels = local_labels.copy()
 
     except Exception as e:
         import traceback as tb
@@ -132,13 +141,14 @@ if __name__ == '__main__':
     import argparse
 
     argparser = argparse.ArgumentParser(description='generate dataset')
-    argparser.add_argument('--path',               default='raw_data', type=str,        help='path')
-    argparser.add_argument('--verbose',            default=False, action='store_true',  help='verbose')
-    argparser.add_argument('--start-date', '-sd',  default=None)
-    argparser.add_argument('--end-date', '-ed',    default='2021-09-30')
-    argparser.add_argument('--past-quarters',      default=4, type=int)
-    argparser.add_argument('--value-threshold',    default=None, type=float)
-    argparser.add_argument('--output',             default='output')
+    argparser.add_argument('--path',                 default='raw_data', type=str,        help='path')
+    argparser.add_argument('--verbose',              default=False, action='store_true',  help='verbose')
+    argparser.add_argument('--start-date', '-sd',    default=None)
+    argparser.add_argument('--end-date', '-ed',      default='2021-09-30')
+    argparser.add_argument('--past-quarters',        default=4, type=int)
+    argparser.add_argument('--value-threshold',      default=None, type=float)
+    argparser.add_argument('--output',               default='output')
+    argparser.add_argument('--label_for_priormonth', default=False, action='store_true',  help='label for priormonth.')
 
     args = argparser.parse_args()
 
