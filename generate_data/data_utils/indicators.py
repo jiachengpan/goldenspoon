@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
+from random import sample
 from data_utils import Indicator
 import os
 import sys
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -36,6 +39,58 @@ class stocks_dynamic_indicators():
         self.ind_stocks_general = ind_stocks_general
         self.ind_stocks_perf = ind_stocks_perf
         self.ind_stocks_perf_with_fund = ind_stocks_perf_with_fund
+    
+    def joyan_test (self, perf_metric, df_func):
+        stock_id_list = []
+        full_report_momentum_list= []
+        partial_report_momentum_list = []
+        print ('now you are in joyan_test function')
+
+        firstindustry_count = compute_firstindustry_count(
+            self.ind_stocks_general)
+
+        for industry in firstindustry_count.keys():
+            industry_stocks_general = self.ind_stocks_general.loc[
+                self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
+
+            for stock_id in industry_stock_id:
+                ind_stocks_perf_temp = (
+                    df_func.loc[df_func['股票代码'] == stock_id])
+                ind_stocks_quater_count = ind_stocks_perf_temp.shape[0]
+
+                full_report_list = []
+                partial_report_list = []
+                if ind_stocks_quater_count >=4:
+                    for i in range (ind_stocks_quater_count):
+                        sample_quarter = ind_stocks_perf_temp.iloc[i]['日期']
+                        #print ('sample quarter,', sample_quarter, sample_quarter.month)
+                        if (sample_quarter.month == 6) or (sample_quarter.month == 12):
+                            #print ('find a full quarter')
+                            sample = ind_stocks_perf_temp.iloc[i][perf_metric]
+                            full_report_list.append(sample)
+                        elif (sample_quarter.month == 3) or (sample_quarter.month == 9):
+                            #print ('find a partial quarter')
+                            sample = ind_stocks_perf_temp.iloc[i][perf_metric]
+                            partial_report_list.append(sample)                          
+                    #print (full_report_list)
+                    #print (partial_report_list)
+                    if len(full_report_list)>=2:
+                        full_report_momentum = (full_report_list[-1]-full_report_list[-2])/full_report_list[-2]
+                    else: full_report_momentum = np.nan
+                    if len(partial_report_list)>=2:
+                        partial_report_momentum = (partial_report_list[-1]-partial_report_list[-2])/partial_report_list[-2]
+                    else: partial_report_momentum = np.nan
+                    #print ('full_report_momentum',full_report_momentum)
+                    #print ('partial_report_momentum',partial_report_momentum)
+                else:
+                    full_report_momentum = np.nan
+                    partial_report_momentum = np.nan
+                stock_id_list.append(stock_id)
+                full_report_momentum_list.append(full_report_momentum)
+                partial_report_momentum_list.append(partial_report_momentum)
+        print ('now you are leaving joyan_test function')
+        return stock_id_list, full_report_momentum_list, partial_report_momentum_list
 
     def q_quater_mean_std(self, perf_metric, df_func):
         print(f'DBG: q_quarter_mean_std: {perf_metric}')
@@ -72,6 +127,7 @@ class stocks_dynamic_indicators():
                 stock_id_list.append(stock_id)
                 change_mean_list.append(change_mean)
                 change_std_list.append(change_std)
+        # assert(0)
         return stock_id_list, change_mean_list, change_std_list
 
     # mean std function for stock fund affinity
@@ -235,6 +291,77 @@ class stocks_industry_dynamic_indicators():
         self.past_quater_number = past_quater_number
         self.ind_stocks_general = ind_stocks_general
 
+    def joyan_test (self, perf_metric, df_func):
+        stock_id_list = []
+        full_report_momentum_list= []
+        partial_report_momentum_list = []
+        print ('now you are in joyan_test function')
+
+        firstindustry_count = compute_firstindustry_count(
+            self.ind_stocks_general)
+
+        for industry in firstindustry_count.keys():
+            industry_stocks_general = self.ind_stocks_general.loc[
+                self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
+            industry_stock_id = industry_stocks_general['股票代码'].unique()
+
+            industry_stock_id_list = []
+            change_full_list = []
+            change_partial_list = []
+
+            for stock_id in industry_stock_id:
+                ind_stocks_perf_temp = (
+                    df_func.loc[df_func['股票代码'] == stock_id])
+                ind_stocks_quater_count = ind_stocks_perf_temp.shape[0]
+ 
+
+
+
+                full_report_list = []
+                partial_report_list = []
+                if ind_stocks_quater_count >=4:
+                    for i in range (ind_stocks_quater_count):
+                        sample_quarter = ind_stocks_perf_temp.iloc[i]['日期']
+                        #print ('sample quarter,', sample_quarter, sample_quarter.month)
+                        if (sample_quarter.month == 6) or (sample_quarter.month == 12):
+                            #print ('find a full quarter')
+                            sample = ind_stocks_perf_temp.iloc[i][perf_metric]
+                            full_report_list.append(sample)
+                        elif (sample_quarter.month == 3) or (sample_quarter.month == 9):
+                            #print ('find a partial quarter')
+                            sample = ind_stocks_perf_temp.iloc[i][perf_metric]
+                            partial_report_list.append(sample)                          
+                    #print (full_report_list)
+                    #print (partial_report_list)
+                    if len(full_report_list)>=2:
+                        full_report_momentum = (full_report_list[-1]-full_report_list[-2])/full_report_list[-2]
+                    else: full_report_momentum = np.nan
+                    if len(partial_report_list)>=2:
+                        partial_report_momentum = (partial_report_list[-1]-partial_report_list[-2])/partial_report_list[-2]
+                    else: partial_report_momentum = np.nan
+                    #print ('full_report_momentum',full_report_momentum)
+                    #print ('partial_report_momentum',partial_report_momentum)
+                else:
+                    full_report_momentum = np.nan
+                    partial_report_momentum = np.nan
+
+                if (not np.isnan(full_report_momentum) and (not np.isnan(partial_report_momentum))):
+                    change_full_list.append(full_report_momentum)
+                    change_partial_list.append(partial_report_momentum)
+
+                industry_stock_id_list.append(stock_id)
+
+
+            industry_change_full = np.array(change_full_list).mean()
+            industry_change_partial = np.array(change_partial_list).mean()
+            for i in range(len(industry_stock_id_list)):
+                full_report_momentum_list.append(industry_change_full)
+                partial_report_momentum_list.append(industry_change_partial)
+            stock_id_list.extend(industry_stock_id_list)
+
+        print ('now you are leaving joyan_test function')
+        return stock_id_list, full_report_momentum_list, partial_report_momentum_list
+
     def q_quater_mean_std(self, perf_metric, df_func):
         print(f'DBG: q_quarter_mean_std: {perf_metric}')
         stock_id_list = []
@@ -249,13 +376,19 @@ class stocks_industry_dynamic_indicators():
                 self.ind_stocks_general['所属中证行业(2016) [行业类别]1级'] == industry]
             industry_stock_id = industry_stocks_general['股票代码'].unique()
 
+
+
             industry_stock_id_list = []
             change_mean_list = []
             change_std_list = []
+
             for stock_id in industry_stock_id:
                 ind_stocks_perf_temp = (
                     df_func.loc[df_func['股票代码'] == stock_id])
                 ind_stocks_quater_count = ind_stocks_perf_temp.shape[0]
+
+
+
 
                 if ind_stocks_quater_count > 0:
                     sample = ind_stocks_perf_temp[perf_metric]
@@ -321,11 +454,12 @@ def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, 
     avg_price_stock_id_list, avg_price_mean, avg_price_std = stocks_industry_dynamic.q_quater_mean_std(
         '区间日均总市值 [起始交易日期]截止日3月前 [单位]元', ind_stocks_perf)
     # b. Average rate of change and standard deviation of Total Fund Shareholding over the past N quarters
-    fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std = stocks_industry_dynamic.q_quater_mean_std(
+    fund_shareholding_id_list, fund_shareholding_full, fund_shareholding_partial = stocks_industry_dynamic.joyan_test(
         '基金持股总值', ind_stocks_perf_holding_funds_share)
     # c. Average rate of change and standard deviation of Number of Fund Companies over the past N quarters
-    fund_number_id_list, fund_number_mean, fund_number_std = stocks_industry_dynamic.q_quater_mean_std(
+    fund_number_id_list, fund_number_full, fund_number_partial = stocks_industry_dynamic.joyan_test(
         '持股基金家数 [股本类型]流通股本', ind_stocks_perf_holding_funds_share)
+
 
     assert len(avg_price_stock_id_list) == len(
         fund_shareholding_id_list) == len(fund_number_id_list)
@@ -333,9 +467,9 @@ def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, 
     df_avg_price = meanstd_list_to_df(
         avg_price_stock_id_list, avg_price_mean, avg_price_std, flag='market_value')
     df_fund_shareholding = meanstd_list_to_df(
-        fund_shareholding_id_list, fund_shareholding_mean, fund_shareholding_std, flag='fund_shareholding')
+        fund_shareholding_id_list, fund_shareholding_full, fund_shareholding_partial, flag='fund_shareholding')
     df_fund_number = meanstd_list_to_df(
-        fund_number_id_list, fund_number_mean, fund_number_std, flag='fund_number')
+        fund_number_id_list, fund_number_full, fund_number_partial, flag='fund_number')
 
     dfs = [df_avg_price, df_fund_shareholding, df_fund_number]
     df_final = merge_dfs(dfs)
@@ -358,16 +492,19 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
         '月振幅 [单位]%', ind_stocks_perf)  # data base:ind_stocks_perf
     margin_diff_stock_id_list, margin_diff_mean, margin_diff_std = stocks_dynamic.q_quater_mean_std(
         '融资融券差额 [单位]元', ind_stocks_perf)  # data base:ind_stocks_perf
-    share_ratio_of_funds_stock_id_list, share_ratio_of_funds_mean, share_ratio_of_funds_std = stocks_dynamic.q_quater_mean_std(
-        '基金持股比例 [单位]% [比例类型]占流通股比例', ind_stocks_holding_funds_share)  # data base: ind_stocks_holding_funds_share
-    num_of_funds_stock_id_list, num_of_funds_mean, num_of_funds_std = stocks_dynamic.q_quater_mean_std(
-        '持股基金家数 [股本类型]流通股本', ind_stocks_holding_funds_share)  # data base:ind_stocks_holding_funds_number
+
     fund_owner_affinity_stock_id_list, fund_owner_affinity_mean, fund_owner_affinity_std = stocks_dynamic.q_quater_fund_owner_affinity_mean_std(
         '基金管理人简称')
     fund_revisit_stock_id_list, fund_revisit_mean = stocks_dynamic.q_quater_fund_revisit_mean(
         '基金代码')
     cyclical_industry_stock_id_list, cyclical_industry = stocks_dynamic.stock_cyclical_industry(
         k_cyclical_industry_keys)
+
+    share_ratio_of_funds_stock_id_list, share_ratio_of_funds_full, share_ratio_of_funds_partial = stocks_dynamic.joyan_test('持股基金家数 [股本类型]流通股本', ind_stocks_holding_funds_share)
+    num_of_funds_stock_id_list, num_of_funds_full, num_of_funds_partial = stocks_dynamic.joyan_test('基金持股比例 [单位]% [比例类型]占流通股比例', ind_stocks_holding_funds_share)
+    avg_share_ratio_of_funds_stock_id_list, avg_share_ratio_of_funds_mean, avg_share_ratio_of_funds_std = stocks_dynamic.q_quater_mean_std('平均基金持股比例', ind_stocks_holding_funds_share)
+
+
     assert len(close_price_stock_id_list) == len(avg_price_stock_id_list) == len(turnover_rate_stock_id_list) == len(amplitutde_stock_id_list) == len(margin_diff_stock_id_list) == \
         len(share_ratio_of_funds_stock_id_list) == len(num_of_funds_stock_id_list) == len(
             fund_owner_affinity_stock_id_list) == len(fund_revisit_stock_id_list) == len(cyclical_industry_stock_id_list)
@@ -382,10 +519,15 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
         amplitutde_stock_id_list, amplitutde_mean, amplitutde_std, flag='amplitutde')
     df_margin_diff = meanstd_list_to_df(
         margin_diff_stock_id_list, margin_diff_mean, margin_diff_std, flag='margin_diff')
+
     df_share_ratio_of_funds = meanstd_list_to_df(
-        share_ratio_of_funds_stock_id_list, share_ratio_of_funds_mean, share_ratio_of_funds_std, flag='share_ratio_of_funds')
+        share_ratio_of_funds_stock_id_list, share_ratio_of_funds_full, share_ratio_of_funds_partial, flag='share_ratio_of_funds')
     df_num_of_funds = meanstd_list_to_df(
-        num_of_funds_stock_id_list, num_of_funds_mean, num_of_funds_std, flag='num_of_funds')
+        num_of_funds_stock_id_list, num_of_funds_full, num_of_funds_partial, flag='num_of_funds')
+    df_avg_share_ratio_of_funds = meanstd_list_to_df(
+        avg_share_ratio_of_funds_stock_id_list, avg_share_ratio_of_funds_mean, avg_share_ratio_of_funds_std, flag='avg_share_ratio_of_funds')
+
+
     df_fund_owner_affinity = meanstd_list_to_df(
         fund_owner_affinity_stock_id_list, fund_owner_affinity_mean, fund_owner_affinity_std, flag='fund_owner_affinity')
     # df_fund_revisit = cumstomlist_to_df(fund_revisit_stock_id_list, fund_revisit_mean,flags=['fund_revisit'])
@@ -393,7 +535,7 @@ def get_stocks_dynamic_indicators(ind_stocks_general, ind_stocks_perf, ind_stock
         cyclical_industry_stock_id_list, cyclical_industry, flags=['cyclical_industry'])
 
     dfs = [df_close_price, df_avg_price, df_turnover_rate, df_amplitutde, df_margin_diff,
-           df_share_ratio_of_funds, df_num_of_funds, df_fund_owner_affinity, df_cyclical_industry]
+           df_share_ratio_of_funds, df_num_of_funds, df_fund_owner_affinity, df_cyclical_industry, df_avg_share_ratio_of_funds]
 
     df_final = merge_dfs(dfs)
     return df_final
@@ -427,6 +569,8 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_general = ind.get_stock_general()
     ind_stocks_perf = ind.get_stock_performance()
     ind_stocks_holding_funds_share = ind.get_stock_holding_funds_share()
+    
+
     #ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
     #ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()
 
@@ -496,12 +640,19 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_perf_with_fund = pd.merge(
         new_df, ind_funds_general, how='outer', on=['日期', '基金代码'])
 
+
+    ###joyan_test
+    print ('Joyan test 11111')
+    minimal_fund_number = 4
+    avg_holding_funds_share = (ind_stocks_holding_funds_share['基金持股比例 [单位]% [比例类型]占流通股比例']/ind_stocks_holding_funds_share['持股基金家数 [股本类型]流通股本'])
+    ind_stocks_holding_funds_share['平均基金持股比例'] = avg_holding_funds_share
+
     df_stocks_industry_static_indicators = get_stocks_industry_static_indicators(
         ind_stocks_general_new)
     df_stocks_industry_dynamic_indicators = get_stocks_industry_dynamic_indicators(
         ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share)
     df_stocks_dynamic_indicators = get_stocks_dynamic_indicators(
-        ind_stocks_general, ind_stocks_perf, ind_stocks_perf_holding_funds_share, ind_stocks_perf_with_fund)
+        ind_stocks_general, ind_stocks_perf, ind_stocks_holding_funds_share, ind_stocks_perf_with_fund)
 
     dfs = [
         df_stocks_industry_static_indicators,
@@ -522,10 +673,16 @@ def dict_to_df(my_dict):
 
 
 def meanstd_list_to_df(id, mean, std, flag):
-    dict = {"id": id,
-            flag + "_mean": mean,
-            flag + "_std": std}
-    df = pd.DataFrame(dict)
+    if flag in ['share_ratio_of_funds','num_of_funds','fund_shareholding','fund_number']:
+        dict = {"id": id,
+                flag + "_full": mean,
+                flag + "_partial": std}
+        df = pd.DataFrame(dict)
+    else:
+        dict = {"id": id,
+                flag + "_mean": mean,
+                flag + "_std": std}
+        df = pd.DataFrame(dict)
     return df
 
 
