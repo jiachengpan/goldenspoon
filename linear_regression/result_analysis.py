@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import heapq
 
 # 2. result visualization
 
@@ -59,7 +61,7 @@ def draw_confusion_matrix(TP, FP, TN, FN, save_path_permonth):
 # 3. confusion_matrix
 
 
-def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
+def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_regress_value=None, stock_id=None, y_pred_prob=None):
     y_pred = np.array(y_pred).flatten()
     y_true = np.array(y_true).flatten()
     cur_stock_price_test = np.array(cur_stock_price_test).flatten()
@@ -71,15 +73,46 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
     T_big_positive = 0
     T_mid_negative = 0
     T_big_negative = 0
+
     F_small = 0
     F_mid_positive = 0
     F_big_positive = 0
     F_mid_negative = 0
     F_big_negative = 0
+    F_small_exclude_small = 0
+    F_mid_positive_exclude_small = 0
+    F_big_positive_exclude_small = 0
+    F_mid_negative_exclude_small = 0
+    F_big_negative_exclude_small = 0
+
     T_positive = 0
     T_negative = 0
     F_positive = 0
     F_negative = 0
+    F_positive_exclude_small = 0
+    F_negative_exclude_small = 0
+
+    big_positive_y_pred = []
+    big_positive_y_pred_prob = []
+    big_positive_y_true = []
+
+    big_positive_y_true_regress = []
+    big_positive_y_true_id = []
+    mid_positive_y_pred = []
+    mid_positive_y_true = []
+    mid_positive_y_true_regress = []
+    mid_positive_y_true_id = []
+
+    big_negative_y_true = []
+    big_negative_y_true_regress = []
+    big_negative_y_true_id = []
+
+    big_negative_y_pred_prob = []
+
+    positive_y_pred = []
+    positive_y_true = []
+    positive_y_true_regress = []
+    positive_y_true_id = []
     for i in range(len(y_true)):
         if '_predict_absvalue_price' in i_month_label:
             assert(0)
@@ -97,36 +130,69 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
                 else:
                     F_small +=1
             elif y_pred_case == 'mid_positive':
+                if y_true_regress_value is not None:
+                    mid_positive_y_true.append(y_true_case)
+                    mid_positive_y_true_regress.append(y_true_regress_value[i])
+                    mid_positive_y_true_id.append(stock_id[i][0])
                 if (y_true_case) == (y_pred_case) :
                     T_mid_positive += 1
                 else:
                     F_mid_positive +=1
+                    if y_true_case not in ['small','big_positive']:
+                        F_mid_positive_exclude_small += 1
             elif y_pred_case == 'big_positive':
+                if y_true_regress_value is not None:
+                    big_positive_y_true.append(y_true_case)
+                    big_positive_y_true_regress.append(y_true_regress_value[i])
+                    big_positive_y_true_id.append(stock_id[i][0])
+                    big_positive_y_pred_prob.append(y_pred_prob[i])
                 if (y_true_case) == (y_pred_case) :
                     T_big_positive += 1
                 else:
                     F_big_positive +=1
+                    if y_true_case not in ['small','mid_positive']:
+                        F_big_positive_exclude_small += 1
             elif y_pred_case == 'mid_negative':
                 if (y_true_case) == (y_pred_case) :
                     T_mid_negative += 1
                 else:
                     F_mid_negative +=1
+                    if y_true_case not in ['small','big_negative']:
+                        F_mid_negative_exclude_small += 1
             elif y_pred_case == 'big_negative':
+                if y_true_regress_value is not None:
+                    big_negative_y_true.append(y_true_case)
+                    big_negative_y_true_regress.append(y_true_regress_value[i])
+                    big_negative_y_true_id.append(stock_id[i][0])
+                    big_negative_y_pred_prob.append(y_pred_prob[i])
                 if (y_true_case) == (y_pred_case) :
                     T_big_negative += 1
                 else:
                     F_big_negative +=1
+                    if y_true_case not in ['small','mid_negative']:
+                        F_big_negative_exclude_small += 1
 
             if 'positive' in str(y_pred_case):
+                if y_true_regress_value is not None:
+                    positive_y_pred.append(y_pred_case)
+                    positive_y_true.append(y_true_case)
+                    positive_y_true_regress.append(y_true_regress_value[i])
+                    positive_y_true_id.append(stock_id[i][0])
                 if 'positive' in str(y_true_case):
                     T_positive += 1
                 else:
                     F_positive += 1
+                    if y_true_case != 'small':
+                        F_positive_exclude_small += 1
+
             elif 'negative' in str(y_pred_case):
                 if 'negative' in str(y_true_case):
                     T_negative += 1
                 else:
                     F_negative += 1
+                    if y_true_case != 'small':
+                        F_negative_exclude_small += 1
+
         elif isinstance(y_true_case,float):
             # share prices are rising in y_true, also y_pred
             if (y_true_case) >= 0 and (y_pred_case) >= 0:
@@ -141,50 +207,98 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label):
             if (y_true_case) >= 0 and (y_pred_case) < 0:
                 FN += 1
 
+    def acc(T,F):
+        try:
+            acc = (T)/(T+F)
+        except:
+            acc = 0 
+        return acc
+
     if isinstance(y_true_case,str):
-        try:
-            acc_small = (T_small)/(T_small+F_small)
-        except:
-            acc_small = 0 
-        
-        try:
-            acc_mid_positive = (T_mid_positive)/(T_mid_positive+F_mid_positive)
-        except:
-            acc_mid_positive = 0 
-        
-        try:
-            acc_big_positive = (T_big_positive)/(T_big_positive+F_big_positive)
-        except:
-            acc_big_positive = 0
-        
-        try:
-            acc_mid_negative = (T_mid_negative)/(T_mid_negative+F_mid_negative)
-        except:
-            acc_mid_negative = 0 
-        
-        try:
-            acc_big_negative = (T_big_negative)/(T_big_negative+F_big_negative)
-        except:
-            acc_big_negative = 0
+        acc_small = acc(T_small,F_small)
+        print("acc_small:{}, T_num:{}, F_num:{}".format(acc_small,T_small,F_small))
 
-        if T_positive+F_positive == 0:
-            acc_positive = 0
-        else:
-            acc_positive = (T_positive)/(T_positive+F_positive)
+        acc_mid_positive = acc(T_mid_positive,F_mid_positive)
+        acc_mid_positive_exclude_small = acc(T_mid_positive,F_mid_positive_exclude_small)
+        print("acc_mid_positive:{}, acc_mid_positive_exclude_small_big_positive:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_mid_positive, acc_mid_positive_exclude_small, T_mid_positive, F_mid_positive, F_mid_positive_exclude_small))
 
-        if T_negative+F_negative == 0:
-            acc_negative = 0
-        else:
-            acc_negative = (T_negative)/(T_negative+F_negative)
+        acc_big_positive = acc(T_big_positive,F_big_positive)
+        acc_big_positive_exclude_small = acc(T_big_positive,F_big_positive_exclude_small)
+        print("acc_big_positive:{}, acc_big_positive_exclude_small_mid_positive:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_big_positive, acc_big_positive_exclude_small, T_big_positive, F_big_positive, F_big_positive_exclude_small))
 
-        return acc_small, acc_mid_positive, acc_big_positive, acc_mid_negative, acc_big_negative, acc_positive, acc_negative
+        acc_mid_negative = acc(T_mid_negative,F_mid_negative)
+        acc_mid_negative_exclude_small = acc(T_mid_negative,F_mid_negative_exclude_small)
+        print("acc_mid_negative:{}, acc_mid_negative_exclude_small_big_negative:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_mid_negative, acc_mid_negative_exclude_small, T_mid_negative, F_mid_negative, F_mid_negative_exclude_small))
+
+        acc_big_negative = acc(T_big_negative,F_big_negative)
+        acc_big_negative_exclude_small = acc(T_big_negative,F_big_negative_exclude_small)
+        print("acc_big_negative:{}, acc_big_negative_exclude_small_mid_negative:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_big_negative, acc_big_negative_exclude_small, T_big_negative, F_big_negative, F_big_negative_exclude_small))
+
+        acc_positive = acc(T_positive,F_positive)
+        acc_positive_exclude_small = acc(T_positive,F_positive_exclude_small)
+        print("acc_positive:{}, acc_positive_exclude_small:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_positive, acc_positive_exclude_small, T_positive, F_positive, F_positive_exclude_small))
+
+        acc_negative = acc(T_negative,F_negative)
+        acc_negative_exclude_small = acc(T_negative,F_negative_exclude_small)
+        print("acc_negative:{}, acc_negative_exclude_small:{}, T_num:{}, F_num:{}, F_exclude_num:{}"\
+            .format(acc_negative, acc_negative_exclude_small, T_negative, F_negative, F_negative_exclude_small))
+
+
+        df_big_positive = pd.DataFrame()
+        if y_true_regress_value is not None:
+
+            print("--raw--")
+            ########################################
+            # tops10 = heapq.nlargest(10, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
+            # tops10_profit = []
+            # tops20 = heapq.nlargest(20, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
+            # tops20_profit = []
+            # for i in tops20:
+            #     print("id: {}, pred: big_positive, true_c: {}, true_r: {}, pred_prob: {}".format(big_positive_y_true_id[i], big_positive_y_true[i],big_positive_y_true_regress[i],big_positive_y_pred_prob[i]))
+            #     tops20_profit.append(big_positive_y_true_regress[i])
+            #     if i in tops10:
+            #         tops10_profit.append(big_positive_y_true_regress[i])
+            # print("Buy all big_positive, profit: {}".format(np.array(big_positive_y_true_regress).mean()))
+            # print("Buy top10 big_positive, profit: {}".format(np.array(tops10_profit).mean()))
+            # print("Buy top20 big_positive, profit: {}".format(np.array(tops20_profit).mean()))
+            ########################################
+            ########################################
+            tops10 = heapq.nlargest(10, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            tops10_profit = []
+            tops20 = heapq.nlargest(20, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            tops20_profit = []
+            for i in tops20:
+                print("id: {}, pred: big_negative, true_c: {}, true_r: {}, pred_prob: {}".format(big_negative_y_true_id[i], big_negative_y_true[i],big_negative_y_true_regress[i],big_negative_y_pred_prob[i]))
+                tops20_profit.append(big_negative_y_true_regress[i])
+                if i in tops10:
+                    tops10_profit.append(big_negative_y_true_regress[i])
+            print("Buy all big_negative, profit: {}".format(np.array(big_negative_y_true_regress).mean()))
+            print("Buy top10 big_negative, profit: {}".format(np.array(tops10_profit).mean()))
+            print("Buy top20 big_negative, profit: {}".format(np.array(tops20_profit).mean()))
+            ########################################
+            # for i in range(len(mid_positive_y_true)):
+            #     print("id: {}, pred: mid_positive, true_c: {}, true_r: {}".format(mid_positive_y_true_id[i], mid_positive_y_true[i],mid_positive_y_true_regress[i]))
+            # print("Buy all mid_positive, profit: {}".format(np.array(mid_positive_y_true_regress).mean()))
+
+            # for i in range(len(positive_y_true)):
+            #     print("id: {}, pred: {}, true_c: {}, true_r: {}".format(positive_y_true_id[i], positive_y_pred[i], positive_y_true[i], positive_y_true_regress[i]))
+            # print("Buy all big_positive and mid_positive, profit: {}".format(np.array(positive_y_true_regress).mean()))
+
+            ########################################
+            df_big_positive['id'] = big_positive_y_true_id
+            df_big_positive['positive_y_true_regress'] = big_positive_y_true_regress
+        return df_big_positive
 
     return TP, FP, TN, FN
 
 # 4. drop stocks with small changes
 
 def drop_small_change_stock_fntrain(y_train, x_train, drop_ponit, train_stock_id):
-
     valid_stock_list = np.where(np.absolute(y_train) > drop_ponit)
     valid_stock_list = np.asarray(valid_stock_list)
     valid_stock_list = valid_stock_list.transpose()
