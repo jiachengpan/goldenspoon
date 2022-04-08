@@ -59,9 +59,7 @@ def draw_confusion_matrix(TP, FP, TN, FN, save_path_permonth):
     return 
 
 # 3. confusion_matrix
-
-
-def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_regress_value=None, stock_id=None, y_pred_prob=None):
+def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_regress_value=None, stock_id=None, y_pred_prob=None, votingclassifier_y_pred_prob=None):
     y_pred = np.array(y_pred).flatten()
     y_true = np.array(y_true).flatten()
     cur_stock_price_test = np.array(cur_stock_price_test).flatten()
@@ -94,6 +92,7 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_reg
 
     big_positive_y_pred = []
     big_positive_y_pred_prob = []
+    big_positive_votingclassifier_y_pred_prob = []
     big_positive_y_true = []
 
     big_positive_y_true_regress = []
@@ -102,6 +101,8 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_reg
     mid_positive_y_true = []
     mid_positive_y_true_regress = []
     mid_positive_y_true_id = []
+    mid_positive_y_pred_prob = []
+    mid_positive_votingclassifier_y_pred_prob = []
 
     big_negative_y_true = []
     big_negative_y_true_regress = []
@@ -134,6 +135,14 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_reg
                     mid_positive_y_true.append(y_true_case)
                     mid_positive_y_true_regress.append(y_true_regress_value[i])
                     mid_positive_y_true_id.append(stock_id[i][0])
+                    mid_positive_y_pred_prob.append(y_pred_prob[i])
+
+                    if votingclassifier_y_pred_prob != None:
+                        _y_pred_prob_list = {}
+                        for key in votingclassifier_y_pred_prob.keys():
+                            _y_pred_prob_list[key] = votingclassifier_y_pred_prob[key][i]
+                        mid_positive_votingclassifier_y_pred_prob.append(_y_pred_prob_list)
+
                 if (y_true_case) == (y_pred_case) :
                     T_mid_positive += 1
                 else:
@@ -146,6 +155,13 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_reg
                     big_positive_y_true_regress.append(y_true_regress_value[i])
                     big_positive_y_true_id.append(stock_id[i][0])
                     big_positive_y_pred_prob.append(y_pred_prob[i])
+
+                    if votingclassifier_y_pred_prob != None:
+                        _y_pred_prob_list = {}
+                        for key in votingclassifier_y_pred_prob.keys():
+                            _y_pred_prob_list[key] = votingclassifier_y_pred_prob[key][i]
+                        big_positive_votingclassifier_y_pred_prob.append(_y_pred_prob_list)
+
                 if (y_true_case) == (y_pred_case) :
                     T_big_positive += 1
                 else:
@@ -254,41 +270,48 @@ def perf_measure(y_pred, y_true, cur_stock_price_test, i_month_label, y_true_reg
 
             print("--raw--")
             ########################################
-            # tops10 = heapq.nlargest(10, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
-            # tops10_profit = []
-            # tops20 = heapq.nlargest(20, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
-            # tops20_profit = []
-            # for i in tops20:
-            #     print("id: {}, pred: big_positive, true_c: {}, true_r: {}, pred_prob: {}".format(big_positive_y_true_id[i], big_positive_y_true[i],big_positive_y_true_regress[i],big_positive_y_pred_prob[i]))
-            #     tops20_profit.append(big_positive_y_true_regress[i])
-            #     if i in tops10:
-            #         tops10_profit.append(big_positive_y_true_regress[i])
-            # print("Buy all big_positive, profit: {}".format(np.array(big_positive_y_true_regress).mean()))
-            # print("Buy top10 big_positive, profit: {}".format(np.array(tops10_profit).mean()))
-            # print("Buy top20 big_positive, profit: {}".format(np.array(tops20_profit).mean()))
-            ########################################
-            ########################################
-            tops10 = heapq.nlargest(10, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            tops10 = heapq.nlargest(10, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
             tops10_profit = []
-            tops20 = heapq.nlargest(20, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            tops20 = heapq.nlargest(20, range(len(big_positive_y_pred_prob)), big_positive_y_pred_prob.__getitem__)
             tops20_profit = []
             for i in tops20:
-                print("id: {}, pred: big_negative, true_c: {}, true_r: {}, pred_prob: {}".format(big_negative_y_true_id[i], big_negative_y_true[i],big_negative_y_true_regress[i],big_negative_y_pred_prob[i]))
-                tops20_profit.append(big_negative_y_true_regress[i])
+                if votingclassifier_y_pred_prob != None:
+                    print("id: {}, pred: big_positive, true_c: {}, true_r: {}, pred_prob: {}, votingclassifier_pred_prob: {}".format(big_positive_y_true_id[i], big_positive_y_true[i],big_positive_y_true_regress[i],big_positive_y_pred_prob[i],big_positive_votingclassifier_y_pred_prob[i]))
+                else:
+                    print("id: {}, pred: big_positive, true_c: {}, true_r: {}, pred_prob: {}".format(big_positive_y_true_id[i], big_positive_y_true[i],big_positive_y_true_regress[i],big_positive_y_pred_prob[i]))
+                tops20_profit.append(big_positive_y_true_regress[i])
                 if i in tops10:
-                    tops10_profit.append(big_negative_y_true_regress[i])
-            print("Buy all big_negative, profit: {}".format(np.array(big_negative_y_true_regress).mean()))
-            print("Buy top10 big_negative, profit: {}".format(np.array(tops10_profit).mean()))
-            print("Buy top20 big_negative, profit: {}".format(np.array(tops20_profit).mean()))
+                    tops10_profit.append(big_positive_y_true_regress[i])
+            print("Buy all big_positive, profit: {}".format(np.array(big_positive_y_true_regress).mean()))
+            print("Buy top10 big_positive, profit: {}".format(np.array(tops10_profit).mean()))
+            print("Buy top20 big_positive, profit: {}".format(np.array(tops20_profit).mean()))
             ########################################
-            # for i in range(len(mid_positive_y_true)):
-            #     print("id: {}, pred: mid_positive, true_c: {}, true_r: {}".format(mid_positive_y_true_id[i], mid_positive_y_true[i],mid_positive_y_true_regress[i]))
-            # print("Buy all mid_positive, profit: {}".format(np.array(mid_positive_y_true_regress).mean()))
+            tops10 = heapq.nlargest(10, range(len(mid_positive_y_pred_prob)), mid_positive_y_pred_prob.__getitem__)
+            tops10_profit = []
+            tops20 = heapq.nlargest(20, range(len(mid_positive_y_pred_prob)), mid_positive_y_pred_prob.__getitem__)
+            tops20_profit = []
+            for i in tops20:
+                #print("id: {}, pred: mid_positive, true_c: {}, true_r: {}, pred_prob: {}".format(mid_positive_y_true_id[i], mid_positive_y_true[i],mid_positive_y_true_regress[i],mid_positive_y_pred_prob[i]))
+                tops20_profit.append(mid_positive_y_true_regress[i])
+                if i in tops10:
+                    tops10_profit.append(mid_positive_y_true_regress[i])
+            print("Buy all mid_positive, profit: {}".format(np.array(mid_positive_y_true_regress).mean()))
+            print("Buy top10 mid_positive, profit: {}".format(np.array(tops10_profit).mean()))
+            print("Buy top20 mid_positive, profit: {}".format(np.array(tops20_profit).mean()))
 
-            # for i in range(len(positive_y_true)):
-            #     print("id: {}, pred: {}, true_c: {}, true_r: {}".format(positive_y_true_id[i], positive_y_pred[i], positive_y_true[i], positive_y_true_regress[i]))
-            # print("Buy all big_positive and mid_positive, profit: {}".format(np.array(positive_y_true_regress).mean()))
-
+            ########################################
+            # tops10 = heapq.nlargest(10, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            # tops10_profit = []
+            # tops20 = heapq.nlargest(20, range(len(big_negative_y_pred_prob)), big_negative_y_pred_prob.__getitem__)
+            # tops20_profit = []
+            # for i in tops20:
+            #     print("id: {}, pred: big_negative, true_c: {}, true_r: {}, pred_prob: {}".format(big_negative_y_true_id[i], big_negative_y_true[i],big_negative_y_true_regress[i],big_negative_y_pred_prob[i]))
+            #     tops20_profit.append(big_negative_y_true_regress[i])
+            #     if i in tops10:
+            #         tops10_profit.append(big_negative_y_true_regress[i])
+            # print("Buy all big_negative, profit: {}".format(np.array(big_negative_y_true_regress).mean()))
+            # print("Buy top10 big_negative, profit: {}".format(np.array(tops10_profit).mean()))
+            # print("Buy top20 big_negative, profit: {}".format(np.array(tops20_profit).mean()))
             ########################################
             df_big_positive['id'] = big_positive_y_true_id
             df_big_positive['positive_y_true_regress'] = big_positive_y_true_regress

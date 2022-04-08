@@ -5,6 +5,7 @@ import sklearn
 from sklearn import linear_model
 from sklearn import ensemble
 from sklearn import tree
+from sklearn.naive_bayes import GaussianNB 
 import os
 import csv
 from data_preprocess import DataPreprocess
@@ -145,45 +146,72 @@ def get_args():
         "--data_standardscaler",
         action="store_true",
         help="Data standardscaler.")
+
+    parser.add_argument(
+        "--sample_number",
+        type=int,
+        default=1000,
+        help="Sample number to sample class.")
+
+    parser.add_argument(
+        "--label_norm",
+        action="store_true",
+        help="Data standardscaler.")
+
+    parser.add_argument(
+        "--repeat_run",
+        type=int,
+        default=1,
+        help="repeat run times.")
     return parser.parse_args()
 
 class Regress():
-    def __init__(self, regress_model, save_path_permonth, i_month_label, indicator_list, drop_small_change_stock_fortrain, drop_small_change_stock_fortest, train_drop_ponit, test_drop_ponit):
+    def __init__(self, regress_model, save_path_permonth, i_month_label, indicator_list, \
+                    drop_small_change_stock_fortrain, drop_small_change_stock_fortest, \
+                    train_drop_ponit, test_drop_ponit, sample_number, label_norm):
         self.model = regress_model
         self.save_path_permonth = save_path_permonth
-        # '1_predict_changerate_price' or '1_predict_absvalue_price'
-        self.i_month_label = i_month_label
+        self.i_month_label = i_month_label # '1_predict_changerate_price' or '1_predict_absvalue_price'
         self.indicator_list = indicator_list
         self.drop_small_change_stock_fortrain = drop_small_change_stock_fortrain
         self.drop_small_change_stock_fortest = drop_small_change_stock_fortest
         self.train_drop_ponit = train_drop_ponit
         self.test_drop_ponit = test_drop_ponit
+        self.sample_number = sample_number
+        self.label_norm = label_norm
 
     def result_analysis(self, y_pred, y_test, y_testID, label_type, cur_stock_price_test=None, data_type='test',y_pred_prob=None):
+        """
+        1.label_type == 'class', 进行结果分析
+        """
         global total_big_positive
         if label_type == 'class':
             if data_type == 'test':
                 pre_month_label = str(i_month_predict) + '_predict_changerate_price'
                 y_test_regress_value = y_test_regress_label[[pre_month_label]].values
                 stock_id = y_test_regress_label[['id']].values
+                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, 
+                                                y_test_regress_value, \
+                                                stock_id=stock_id, \
+                                                y_pred_prob=y_pred_prob, \
+                                                votingclassifier_y_pred_prob=self.votingclassifier_y_pred_prob)
 
-                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, y_test_regress_value,stock_id,y_pred_prob)
-
+                # deprecated, 观察big_positive在不同月份连续出现的频率
                 df_big_positive.columns = ['id',pre_month_label]
                 if total_big_positive.empty:
                     total_big_positive = df_big_positive
                 else:
-                    if i_month_predict !=3: ## 当前第三个月数据不准确
-                        total_big_positive = pd.merge(total_big_positive,df_big_positive,how='outer')
+                    total_big_positive = pd.merge(total_big_positive,df_big_positive,how='outer')
             else:
                 pre_month_label = str(i_month_predict) + '_predict_changerate_price'
                 y_train_regress_value = y_train_regress_label[[pre_month_label]].values
                 stock_id = y_train_regress_label[['id']].values
-                ## debug
-                # df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, y_true_regress_value=y_train_regress_value,stock_id=stock_id)
                 df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, y_true_regress_value=None,stock_id=None)
             return
 
+        """
+        1.label_type == 'regress', 进行结果分析
+        """
         if data_type == 'test':
             if self.drop_small_change_stock_fortest:
                 valid_stock_list, y_pred_valid, y_true_valid, test_stock_id_valid = drop_small_change_stock_fntest(
@@ -238,6 +266,9 @@ class Regress():
         return
 
     def data_processing_for_run(self,x_train_,x_test_,y_train_,y_test_,train_ID_df,test_ID_df):
+        """
+        1.如果indicator_use_type == 'all_with_premonth_label', 获取1月的label作为2月的indicator
+        """
         global pretrain_month_label
         global pretest_month_label
         if indicator_use_type == 'all_with_premonth_label' and i_month_predict > 1:
@@ -272,7 +303,9 @@ class Regress():
             x_train_ = x_train_.drop(columns=['id'])
             x_test_ = x_test_.drop(columns=['id'])
 
-        # 2.获取训练集的label、测试集的label、测试集的label对应的股票ID
+        """
+        2.获取训练集的label、测试集的label、测试集的label对应的股票ID
+        """
         # - 训练集重映射
         if (self.drop_small_change_stock_fortrain or (self.train_drop_ponit==0.0)) and (label_type != 'class'):
             ## 需要按照y_train大于drop_ponit做判断, 保留x_train和y_train中涨跌幅绝对值大于drop_ponit的数据
@@ -344,25 +377,6 @@ class Regress():
                         self.graphviz_detail(clf, features,class_names, fig_path=pdf_path_)
 
     def sample_class(self,x_train, y_train,y_trainID=None):
-        ## month1
-        # small           1122
-        # mid_negative    1001
-        # mid_positive     530
-        # big_positive     368
-        # big_negative     328
-        ## month2
-        # small           981
-        # mid_negative    680
-        # mid_positive    576
-        # big_positive    703
-        # big_negative    409
-        ## month3
-        # small           779
-        # mid_negative    728
-        # big_negative    592
-        # big_positive    740
-        # mid_positive    510
-
         temp = pd.concat([x_train, y_train, y_trainID], axis=1)
         temp = x_train.copy()
         temp['_class_'] = y_train
@@ -371,8 +385,8 @@ class Regress():
         typicalNDict = {}
         class_num = dict(temp['_class_'].value_counts())
         for key in class_num.keys():
-            if class_num[key] >=500:
-                typicalNDict[key] = 500
+            if class_num[key] >= self.sample_number:
+                typicalNDict[key] = self.sample_number
             else:
                 typicalNDict[key] = class_num[key]
 
@@ -382,7 +396,7 @@ class Regress():
             tempresult = group.sample(n=n)
             return tempresult
 
-        temp_sample = temp.groupby('_class_',group_keys=False).apply(typicalSampling,typicalNDict)  
+        temp_sample = temp.groupby('_class_', group_keys=False).apply(typicalSampling, typicalNDict)  
 
         y_train_new = temp_sample['_class_']
         y_trainID_new = temp_sample['_id_']
@@ -392,22 +406,22 @@ class Regress():
 
     # Linear regression
     def run(self, data_path, train_date_list, test_date_list, n_month_predict):
-        # 1.数据预处理
+        """
+        1.数据预处理
+        """
         G_LOGGER.info("---------------------- data preprocess ----------------------")
         global y_train_regress_label
         global y_test_regress_label
-        # print("!!!args.data_standardscaler:",args.data_standardscaler)
         if args.data_standardscaler:
             x_train_, x_test_, y_train_, y_test_, train_ID_df, test_ID_df, y_train_regress_label, y_test_regress_label = DataPreprocess(
                 data_path, train_date_list, test_date_list, n_month_predict,
                 self.i_month_label, self.indicator_list,
                 label_type).run_with_standardscaler()
-            # assert(0)
         else:
             x_train_, x_test_, y_train_, y_test_, train_ID_df, test_ID_df, y_train_regress_label, y_test_regress_label = DataPreprocess(
                 data_path, train_date_list, test_date_list, n_month_predict,
                 self.i_month_label, self.indicator_list,
-                label_type).run()
+                label_type).run(self.label_norm)
 
         if label_type == 'regress':
             assert(y_train_regress_label==None)
@@ -416,85 +430,126 @@ class Regress():
 
         x_train, x_test, y_train, y_test, y_trainID, y_testID = self.data_processing_for_run(x_train_,x_test_,y_train_,y_test_,train_ID_df,test_ID_df)
 
-        # 3.模型训练
-        G_LOGGER.info("---------------------- model runing ----------------------")
+        """
+        2.数据采样
+        """
+        G_LOGGER.info("---------------------- train data sample----------------------")
+        G_LOGGER.info(" == before sample == ")
         G_LOGGER.info("-----x_train.shape:{}\n".format(x_train.shape))
-        G_LOGGER.info("-----x_train columns:{}\n".format(x_train.columns.values.tolist()))
+        # G_LOGGER.info("-----x_train columns:{}\n".format(x_train.columns.values.tolist()))
         G_LOGGER.info("-----x_test.shape:{}\n".format(x_test.shape))
-        G_LOGGER.info("-----x_test columns:{}\n".format(x_test.columns.values.tolist()))
-
+        # G_LOGGER.info("-----x_test columns:{}\n".format(x_test.columns.values.tolist()))
         G_LOGGER.info("-----y_train.shape:{}\n".format(y_train.shape))
         G_LOGGER.info("-----y_test.shape:{}\n".format(y_test.shape))
         G_LOGGER.info("-----y_train.class:\n{}".format(y_train.value_counts()))
         G_LOGGER.info("-----y_test.class:\n{}".format(y_test.value_counts()))
 
         # TODO 类别不均衡问题
-        # 1.EasyEnsemble是通过多次从多数类样本有放回的随机抽取一部分样本生成多个子数据集
-        # 将每个子集与少数类数据联合起来进行训练生成多个模型，然后集合多个模型的结果进行判断
-        # 2.欠采样
         x_train, y_train, y_trainID = self.sample_class(x_train,y_train,y_trainID)
-        G_LOGGER.info("---------------------- train data sample----------------------")
+        G_LOGGER.info(" == after sample == ")
         G_LOGGER.info("-----x_train.shape:{}\n".format(x_train.shape))
         G_LOGGER.info("-----x_test.shape:{}\n".format(x_test.shape))
         G_LOGGER.info("-----y_train.shape:{}\n".format(y_train.shape))
         G_LOGGER.info("-----y_test.shape:{}\n".format(y_test.shape))
         G_LOGGER.info("-----y_train.class:\n{}".format(y_train.value_counts()))
         G_LOGGER.info("-----y_test.class:\n{}".format(y_test.value_counts()))
-        G_LOGGER.info("---------------------- end ----------------------")
 
+        """
+        3.模型训练
+        """
+        G_LOGGER.info("---------------------- model runing ----------------------")
         self.model.fit(x_train, y_train)
         y_pred = self.model.predict(x_test)
-        y_pred_prob = self.model.predict_proba(x_test)
-        y_pred_prob = y_pred_prob.max(axis=-1)
+        y_pred_prob = self.model.predict_proba(x_test).max(axis=-1)
+        G_LOGGER.info("model.classes : {}".format(self.model.classes_))
+        for i in range(len(self.model.classes_)):
+            if "big_positive" == self.model.classes_[i]:
+                G_LOGGER.info("big_positive in class-seq-[0,1,2,3,5] number is : {} !!!".format(i))
 
-        graphviz_ = False
-        # graphviz_ = True
-        if graphviz_:
-            features = []
-            for feature in list(x_train.columns):
-                features.append(indicator_map[feature])
-            G_LOGGER.info("features:",features)
-            self.visual(args.training_model, self.model, features)
+        """
+        3.1 graphviz
+            可视化树结构
+        """
+        # # TODO graphviz
+        # graphviz_ = False
+        # if graphviz_:
+        #     features = []
+        #     for feature in list(x_train.columns):
+        #         features.append(indicator_map[feature])
+        #     G_LOGGER.info("features:",features)
+        #     self.visual(args.training_model, self.model, features)
+
+        """
+        3.2 indicator_weight
+            打印回归模型权重参数
+            当indicator_use_type == 'all_with_premonth_label', label为相对前一个月的涨跌幅(而非month0), 同时当月会有前一个月的涨跌幅作为indicator
+            indicator_weight为字典,存储每个model的feature_importances_,votingclassifier含有多个model
+        """
+        indicator_weight = {}
+        if indicator_use_type == 'all_with_premonth_label' and i_month_predict > 1:
+            self.indicator_list.append('premonth_change_rate')
 
         if args.training_model in ['linear', 'ridge', 'lasso']:
-            indicator_weight = list(
+            indicator_weight[args.training_model] = list(
                 zip(self.indicator_list, list(self.model.coef_)))
         elif args.training_model in ['decisiontreeclassifier', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier', 'gbdtclassifier']:
-            indicator_weight = list(
+            indicator_weight[args.training_model] = list(
                 zip(self.indicator_list, list(self.model.feature_importances_)))
         elif args.training_model in ['votingclassifier']:
-            indicator_weight = ['votingclassifier']
-            pass
+            self.votingclassifier_y_pred_prob = {}
+            votingclassifierlist = list(self.model.named_estimators_.keys())
+
+            for sub_classifier_name in votingclassifierlist:
+                sub_classifier_weight = self.model.named_estimators_[sub_classifier_name].feature_importances_
+                indicator_weight[sub_classifier_name] = list(zip(self.indicator_list, list(sub_classifier_weight)))
+
+                # sub_classifier_predict_proba = self.model.named_estimators_[sub_classifier_name].predict_proba(x_test).max(axis=-1)
+                sub_classifier_predict_proba = self.model.named_estimators_[sub_classifier_name].predict_proba(x_test)
+                self.votingclassifier_y_pred_prob[sub_classifier_name] = sub_classifier_predict_proba
         else:
             assert("indicator_weight error!")
 
-        # - 打印回归模型权重参数
         with open(self.save_path_permonth + 'indicator_weight.log', 'w') as f:
-            for i_weight in indicator_weight:
-                f.write(str(i_weight))
-                f.write('\n')
+            for key in indicator_weight.keys():
+                f.write(str(key)+'\n')
+                for i_weight in indicator_weight[key]:
+                    f.write(str(i_weight))
+                    f.write('\n')
             f.close()
 
-        # 4.结果分析
+        if indicator_use_type == 'all_with_premonth_label' and i_month_predict > 1:
+            self.indicator_list.remove('premonth_change_rate')
+
+        """
+        4.结果分析
+        """
         G_LOGGER.info("---------------------- result analysis ----------------------")
-        # - test data analysis
+        """
+        4.1 test data analysis
+        """
         G_LOGGER.info("\n-----test data analysis for {}:".format(label_type))
         self.result_analysis(y_pred, y_test, y_testID, label_type, cur_stock_price_test=y_test_['0_label'], data_type='test', y_pred_prob=y_pred_prob)
-        # - train data analysis
+        """
+        4.2 train data analysis
+        """
         y_pred_fortrain = self.model.predict(x_train)
         y_test_fortrain = y_train
         G_LOGGER.info("\n-----train data analysis for {}:".format(label_type))
         self.result_analysis(y_pred=y_pred_fortrain, y_test=y_test_fortrain, y_testID=y_trainID, label_type=label_type, cur_stock_price_test=None, data_type='train')
 
+
 if __name__ == '__main__':
-    # base parameter
+    """
+        base parameter
+    """
     G_LOGGER.info("***********************************************************")
     args = get_args()
     for arg in vars(args):
-        G_LOGGER.info(format(arg, '<40'), format(" -----> " + str(getattr(args, arg)), '<'))
+        G_LOGGER.info(format(arg, '<40')+format(" -----> " + str(getattr(args, arg)), '<'))
     G_LOGGER.info('\n')
     data_path = args.data_path
-    save_path = args.save_path
+    save_path_base = args.save_path
+    repeat_run = args.repeat_run
 
     n_month_predict = args.n_month_predict
     indicator_use_list = args.indicator_use_list
@@ -510,8 +565,13 @@ if __name__ == '__main__':
     drop_small_change_stock_fortest = args.drop_small_change_stock_fortest
     train_drop_ponit = args.train_drop_ponit
     test_drop_ponit = args.test_drop_ponit
-
+    sample_number = args.sample_number
+    label_norm = args.label_norm
     label_type = args.label_type
+
+    """
+        regress/class model
+    """
     if args.training_model == 'linear':
         regress_model = linear_model.LinearRegression()
     elif args.training_model == 'ridge':
@@ -522,7 +582,7 @@ if __name__ == '__main__':
         regress_model = ensemble.RandomForestRegressor()
         label_type = 'regress'
     elif args.training_model == 'randomforestclssifier':
-        regress_model = ensemble.RandomForestClassifier()
+        regress_model = ensemble.RandomForestClassifier(n_estimators=700, max_depth=10,bootstrap=True, min_samples_leaf=30, min_samples_split=30 )
         label_type = 'class'
     elif args.training_model == 'adaboostregressor':
         base_estimator = ensemble.RandomForestRegressor(n_estimators=10, max_depth=10)
@@ -534,9 +594,8 @@ if __name__ == '__main__':
     elif args.training_model == 'adaboostclassifier':
         base_n_estimators = 10
         max_depth = 10
-        min_impurity_decrease = 0.003
-
-        n_estimators = 100
+        min_impurity_decrease = 0.002
+        n_estimators = 200
         learning_rate = 0.8
 
         print("base_n_estimators:",base_n_estimators)
@@ -545,42 +604,86 @@ if __name__ == '__main__':
         print("learning_rate:",learning_rate)
         print("min_impurity_decrease:",min_impurity_decrease)
 
-        base_estimator = ensemble.RandomForestClassifier(n_estimators=base_n_estimators, max_depth=max_depth, min_impurity_decrease=min_impurity_decrease)
+        base_estimator = ensemble.RandomForestClassifier(n_estimators=200, max_depth=10,bootstrap=True, min_samples_leaf=30, min_samples_split=30,  min_impurity_decrease=min_impurity_decrease )
+        # base_estimator = ensemble.RandomForestClassifier(n_estimators=base_n_estimators, max_depth=max_depth, min_impurity_decrease=min_impurity_decrease)
         regress_model = ensemble.AdaBoostClassifier(base_estimator=base_estimator, n_estimators=n_estimators, learning_rate=learning_rate)
         label_type = 'class'
     elif args.training_model == 'gbdtclassifier':
         # regress_model = ensemble.GradientBoostingClassifier(n_estimators=200, learning_rate=0.01) ## 学习率设置不宜过大
 
-        n_estimators = 200
-        learning_rate = 0.01
+        n_estimators = 300
+        learning_rate = 0.2
         print("n_estimators:",n_estimators)
         print("learning_rate:",learning_rate)
-        regress_model = ensemble.GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate) ## debug
+        #regress_model = ensemble.GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate) ## debug
+        regress_model = ensemble.GradientBoostingClassifier(n_estimators=n_estimators, max_depth=10, min_samples_leaf=60, min_samples_split=60,learning_rate=learning_rate) ## debug
         label_type = 'class'
     elif args.training_model == 'votingclassifier':
-        ada_base_n_estimators = 10
-        ada_max_depth = 10
-        ada_n_estimators = 100
-        ada_learning_rate = 0.8
-        ada_min_impurity_decrease = 0 
-        print("ada_base_n_estimators:",ada_base_n_estimators)
-        print("ada_max_depth:",ada_max_depth)
-        print("ada_n_estimators:",ada_n_estimators)
-        print("ada_learning_rate:",ada_learning_rate)
-        print("ada_min_impurity_decrease:",ada_min_impurity_decrease)
-        base_estimator = ensemble.RandomForestClassifier(n_estimators=ada_base_n_estimators, max_depth=ada_max_depth, min_impurity_decrease=ada_min_impurity_decrease)
-        adaboost_randomforest = ensemble.AdaBoostClassifier(base_estimator=base_estimator, n_estimators=ada_n_estimators, learning_rate=ada_learning_rate)
+        
+        # ADA-RandomForestClassifier
+        G_LOGGER.info(" ================================ ")
+        G_LOGGER.info(" == ADA RandomForestClassifier == ")
+        ada_rf_n_estimators = 100 # change
+        ada_rf_max_depth = 10 # change
+        ada_rf_bootstrap=True
+        ada_rf_min_samples_leaf=50
+        ada_rf_min_samples_split=50
+        ada_rf_random_state=None
+        G_LOGGER.info("ada_rf_n_estimators:{}".format(ada_rf_n_estimators))
+        G_LOGGER.info("ada_rf_max_depth:{}".format(ada_rf_max_depth))
+        G_LOGGER.info("ada_rf_bootstrap:{}".format(ada_rf_bootstrap))
+        G_LOGGER.info("ada_rf_min_samples_leaf:{}".format(ada_rf_min_samples_leaf))
+        G_LOGGER.info("ada_rf_min_samples_split:{}".format(ada_rf_min_samples_split))
+        G_LOGGER.info("ada_rf_random_state:{}".format(ada_rf_random_state))
 
-        gbdt_n_estimators = 200
-        gbdt_learning_rate = 0.01
-        print("gbdt_n_estimators:",gbdt_n_estimators)
-        print("gbdt_learning_rate:",gbdt_learning_rate)
-        gbdt = ensemble.GradientBoostingClassifier(n_estimators=gbdt_n_estimators, learning_rate=gbdt_learning_rate)
+        # ADA
+        G_LOGGER.info(" == ADA == ")
+        ada_n_estimators = 100 # change
+        ada_learning_rate = 0.8 # change
+        G_LOGGER.info("ada_n_estimators:{}".format(ada_n_estimators))
+        G_LOGGER.info("ada_learning_rate:{}".format(ada_learning_rate))
+
+        ada_base_estimator = ensemble.RandomForestClassifier(n_estimators=ada_rf_n_estimators, max_depth=ada_rf_max_depth, bootstrap=ada_rf_bootstrap, min_samples_leaf=ada_rf_min_samples_leaf, min_samples_split=ada_rf_min_samples_split, random_state=ada_rf_random_state)
+        adaboost_randomforest = ensemble.AdaBoostClassifier(base_estimator=ada_base_estimator, n_estimators=ada_n_estimators, learning_rate=ada_learning_rate)
+        G_LOGGER.info(" ================================ ")
+
+        gbdt_n_estimators = 300 # change
+        gbdt_learning_rate = 0.1 # change
+        gbdt_max_depth=10
+        gbdt_min_samples_leaf=50
+        gbdt_min_samples_split=50
+        gbdt_random_state=None
+        G_LOGGER.info(" == GDBTClassifier == ")
+        G_LOGGER.info("gbdt_n_estimators:{}".format(gbdt_n_estimators))
+        G_LOGGER.info("gbdt_learning_rate:{}".format(gbdt_learning_rate))
+        G_LOGGER.info("gbdt_max_depth:{}".format(gbdt_max_depth))
+        G_LOGGER.info("gbdt_min_samples_leaf:{}".format(gbdt_min_samples_leaf))
+        G_LOGGER.info("gbdt_min_samples_split:{}".format(gbdt_min_samples_split))
+        G_LOGGER.info("gbdt_random_state:{}".format(gbdt_random_state))
+        gbdt = ensemble.GradientBoostingClassifier(n_estimators=gbdt_n_estimators, learning_rate=gbdt_learning_rate, max_depth=gbdt_max_depth, min_samples_leaf=gbdt_min_samples_leaf, min_samples_split=gbdt_min_samples_split, random_state=gbdt_random_state)
+        G_LOGGER.info(" ================================ ")
+
+        G_LOGGER.info(" == RandomForestClassifier == ")
+        rf_n_estimators = 700 # change
+        rf_max_depth = 10 # change
+        rf_bootstrap=True
+        rf_min_samples_leaf=50
+        rf_min_samples_split=50
+        rf_random_state=None
+        randomforest = ensemble.RandomForestClassifier(n_estimators=rf_n_estimators, max_depth=rf_max_depth, bootstrap=rf_bootstrap, min_samples_leaf=rf_min_samples_leaf, min_samples_split=rf_min_samples_split, random_state=rf_random_state)
+        G_LOGGER.info("rf_n_estimators:{}".format(rf_n_estimators))
+        G_LOGGER.info("rf_max_depth:{}".format(rf_max_depth))
+        G_LOGGER.info("rf_bootstrap:{}".format(rf_bootstrap))
+        G_LOGGER.info("rf_min_samples_leaf:{}".format(rf_min_samples_leaf))
+        G_LOGGER.info("rf_min_samples_split:{}".format(rf_min_samples_split))
+        G_LOGGER.info("rf_random_state:{}".format(rf_random_state))
+        G_LOGGER.info(" ================================ ")
 
         regress_model = ensemble.VotingClassifier(estimators=[
-            ("adaboost_randomforest",adaboost_randomforest),
-            ("gbdt",gbdt),
-        ],voting="soft") ## 不使用hard进行投票，不均衡，依照模型的权值投票
+            ("randomforest", randomforest),
+            ("adaboost_randomforest", adaboost_randomforest),
+            ("gbdt", gbdt),
+        ],voting="soft")
         label_type = 'class'
     else:
         assert("The training model was not implemented.")
@@ -596,8 +699,7 @@ if __name__ == '__main__':
             indicator_list = all_indicator_list
             G_LOGGER.info("-----indicator_list:{}\n".format(indicator_list))
             indicator_list.remove('fund_shareholding_partial')
-            G_LOGGER.info("-----indicator_list:{}\n".format(indicator_list))
-            # assert(0)
+            G_LOGGER.info("-----remove 'fund_shareholding_partial', indicator_list:{}\n".format(indicator_list))
         else:
             indicator_list = indicator_use_list
     elif indicator_use_type == 'industrial_static':
@@ -625,27 +727,30 @@ if __name__ == '__main__':
     else:
         assert("Wrong indicator list!")
 
-    
-    
-    train_month_label = pd.DataFrame()
-    test_month_label = pd.DataFrame()
-    global i_month_predict
-    global total_big_positive
-    total_big_positive = pd.DataFrame()
+    """
+        Run
+    """
+    for run_time in range(repeat_run):
+        G_LOGGER.start("\n\n\nTraining at {} time!\n\n\n".format(run_time))
+        save_path = save_path_base + '/' +  "run_" +str(run_time)
 
-    for i in range(n_month_predict):
-        i_month_predict = i+1
-        i_month_label = str(i_month_predict) + '_' + predict_mode
-        G_LOGGER.info("\n\n\n******************************** {} : {} ********************************".format(i_month_predict, i_month_label))
+        train_month_label = pd.DataFrame()
+        test_month_label = pd.DataFrame()
+        global i_month_predict
+        global total_big_positive
+        total_big_positive = pd.DataFrame()
 
-        save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
-        if not os.path.exists(save_path_permonth):
-            os.makedirs(save_path_permonth)
+        for i in range(n_month_predict):
+            i_month_predict = i + 1
+            i_month_label = str(i_month_predict) + '_' + predict_mode
+            G_LOGGER.info("\n\n******************************** {} : {} ********************************".format(i_month_predict, i_month_label))
 
-        r = Regress(regress_model, save_path_permonth,
-                    i_month_label, indicator_list,
-                    drop_small_change_stock_fortrain, drop_small_change_stock_fortest,
-                    train_drop_ponit, test_drop_ponit)
-        r.run(data_path, train_date_list, test_date_list, n_month_predict)
-        # if i_month_predict == 2:
-        #     G_LOGGER.verbose("total_big_positive:",total_big_positive)
+            save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
+            if not os.path.exists(save_path_permonth):
+                os.makedirs(save_path_permonth)
+
+            r = Regress(regress_model, save_path_permonth,
+                        i_month_label, indicator_list,
+                        drop_small_change_stock_fortrain, drop_small_change_stock_fortest,
+                        train_drop_ponit, test_drop_ponit, sample_number, label_norm)
+            r.run(data_path, train_date_list, test_date_list, n_month_predict)
