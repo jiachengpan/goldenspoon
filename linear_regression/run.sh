@@ -14,13 +14,13 @@
 # train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31"
 # test_date_list="2021-06-30"
 
-train_date_len=4
-train_date_list="2020-09-30 2020-12-31 2021-03-31 2021-06-30"
-test_date_list="2021-09-30"
+# train_date_len=4
+# train_date_list="2020-09-30 2020-12-31 2021-03-31 2021-06-30"
+# test_date_list="2021-09-30"
 
-# train_date_len=5
-# train_date_list="2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30"
-# test_date_list="2021-12-31"
+train_date_len=6
+train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30"
+test_date_list="2021-12-31"
 
 
 ################################################################################
@@ -28,8 +28,9 @@ debug_mode=T
 run_with_standardscaler=F
 ################################################################################
 #p0
+modelflag=voting_ada_gdbt_200 # change
 repeat_run=3
-run_with_label_norm=F
+run_with_label_norm=T
 sample_number=1000
 data_flag=label_one_month_prior #[label_zero-new,label_zero-pre,label_zero-cur,label_one_month_prior]
 indicator_use_type=all_with_premonth_label #['all','all_with_premonth_label', 'industrial_static', 'industrial_dynamic', 'stock_dynamic', 'static_stock_dynamic','all_dynamic']
@@ -37,8 +38,8 @@ training_model=votingclassifier # votingclassifier # gbdtclassifier #adaboostcla
 label_type=class # ['regress','class']
 
 #p1
-data_path=regress_data-${data_flag}/past_quarters_4/
-result_flag=regress_result-sample${sample_number}-${test_date_list}
+data_path=regress_data_220408-${data_flag}/past_quarters_4/
+result_flag=regress_result_220408-${modelflag}-sample${sample_number}-${test_date_list}
 train_drop_ponit=0.0
 test_drop_ponit=0.0
 ################################################################################

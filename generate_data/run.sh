@@ -34,8 +34,7 @@ else
   output_dir=${output_dir}/regress_data_${dateflag}-label_base0_month/past_quarters_${past_quarters}/
   label_for_priormonth=''
 fi
-echo "output_dir:"
-echo ${output_dir}
+
 
 for end_date in $dates; do
   python -u generate_data.py \
@@ -47,6 +46,7 @@ for end_date in $dates; do
     ${label_for_priormonth} \
     | tee logs/gen.end_date.${end_date}.run.$(date -Idate).log &
 done
-
+echo "output_dir:"
+echo ${output_dir}
 
 wait

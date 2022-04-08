@@ -623,7 +623,7 @@ if __name__ == '__main__':
         # ADA-RandomForestClassifier
         G_LOGGER.info(" ================================ ")
         G_LOGGER.info(" == ADA RandomForestClassifier == ")
-        ada_rf_n_estimators = 100 # change
+        ada_rf_n_estimators = 200 # change
         ada_rf_max_depth = 10 # change
         ada_rf_bootstrap=True
         ada_rf_min_samples_leaf=50
@@ -679,12 +679,20 @@ if __name__ == '__main__':
         G_LOGGER.info("rf_random_state:{}".format(rf_random_state))
         G_LOGGER.info(" ================================ ")
 
+        use_estimators = ["adaboost_randomforest","gbdt"]
         regress_model = ensemble.VotingClassifier(estimators=[
-            ("randomforest", randomforest),
             ("adaboost_randomforest", adaboost_randomforest),
             ("gbdt", gbdt),
         ],voting="soft")
+        G_LOGGER.info("votingclassifier only use estimators : {}".format(use_estimators))
+
+        # regress_model = ensemble.VotingClassifier(estimators=[
+        #     ("randomforest", randomforest),
+        #     ("adaboost_randomforest", adaboost_randomforest),
+        #     ("gbdt", gbdt),
+        # ],voting="soft")
         label_type = 'class'
+        
     else:
         assert("The training model was not implemented.")
 
