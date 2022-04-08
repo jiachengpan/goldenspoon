@@ -5,6 +5,7 @@ import datetime
 import pandas as pd
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
+from utils.logger import G_LOGGER
 
 import data_utils
 
@@ -118,7 +119,7 @@ def main(args):
                 .last()
 
             if args.label_for_priormonth and i>0:
-                assert(0)
+                # assert(0)
                 local_labels = labels[data_utils.Indicator.k_stock_column_close_price]
             else:
                 local_labels = labels[data_utils.Indicator.k_stock_column_close_price]
@@ -130,7 +131,6 @@ def main(args):
             labels.to_pickle(f'{args.output}/labels.{i+1}_month.{end_date.date().isoformat()}.pickle')
 
             if args.label_for_priormonth:
-                assert(0)
                 pre_labels = local_labels.copy()
 
     except Exception as e:
@@ -148,9 +148,12 @@ if __name__ == '__main__':
     argparser.add_argument('--past-quarters',        default=4, type=int)
     argparser.add_argument('--value-threshold',      default=None, type=float)
     argparser.add_argument('--output',               default='output')
-    argparser.add_argument('--label_for_priormonth', default=False, action='store_true',  help='label for priormonth.')
+    argparser.add_argument('--label_for_priormonth', action='store_true',  help='label for priormonth.')
 
     args = argparser.parse_args()
+    for arg in vars(args):
+        G_LOGGER.info(format(arg, '<40')+format(" -----> " + str(getattr(args, arg)), '<'))
+    G_LOGGER.info('\n')
 
     #import cProfile
     main(args)
