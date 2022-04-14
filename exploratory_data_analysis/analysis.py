@@ -8,6 +8,8 @@ from sklearn.metrics import accuracy_score
 
 from dataset import DataSet, Args
 
+k_detail_columns = set(['details'])
+
 def compute_feature_importance(dataset : DataSet):
     model = RandomForestRegressor(max_depth=None, random_state=0)
 
@@ -19,7 +21,7 @@ def compute_feature_importance(dataset : DataSet):
 
     return importance.sort_values('importance')
 
-def test_model(model, dataset : DataSet, args : Args):
+def test_model(model, dataset : DataSet, args : Args, **kwargs):
     model.fit(dataset.x_train, dataset.y_train_cls)
 
     y_pred_prob = model.predict_proba(dataset.x_test)
@@ -63,3 +65,18 @@ def test_model(model, dataset : DataSet, args : Args):
     topN_pos_pnl = stocks_topN_pos['true'].mean()
     print(f'topN #stocks all: {len(stocks_topN_all):7} pos: {len(stocks_topN_pos):7}')
     print(f'topN pnl:    all: {topN_all_pnl * 100:6.2f}% pos: {topN_pos_pnl * 100:6.2f}%')
+
+    result = {f'args.{k}': v for k, v in args.describe().items()}
+    for k, v in kwargs.items():
+        result[f'params.{k}'] = v
+
+    result['accuracy'] = accuracy
+    result['pnl_topn_all'] = topN_all_pnl
+    result['pnl_topn_pos'] = topN_pos_pnl
+
+    details = {
+        'topN': stocks_topN,
+    }
+
+    return result, details
+

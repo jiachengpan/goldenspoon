@@ -4,7 +4,8 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-
+import sklearn
+from sklearn.preprocessing import *
 from collections import defaultdict
 
 class Args:
@@ -16,6 +17,7 @@ class Args:
             change_threshold_train  = -1e-9,
             change_threshold_test   = -1e-9,
             classifier_cut_points   = None,
+            norm                    = None,
             stocks_only             = '',
             stocks_number           = 10,
             debug                   = False,
@@ -29,6 +31,8 @@ class Args:
         self.change_threshold_test  = change_threshold_test
         self.classifier_cut_points  = list(sorted(classifier_cut_points)) if classifier_cut_points is not None else None
 
+        self.norm = norm
+
         self.stocks_only   = stocks_only
         self.stocks_number = stocks_number
 
@@ -37,6 +41,9 @@ class Args:
     @property
     def month_label(self):
         return f'{self.predict_month}_{self.predict_mode}'
+
+    def describe(self):
+        return self.__dict__
 
 class DataSet:
     def __init__(self, *,
@@ -133,7 +140,7 @@ class DataSet:
         return result
 
     @classmethod
-    def prepare_data(cls, data_path, dates, months = 3):
+    def prepare_data(cls, data_path, dates, months = 3, norm = None):
         result = defaultdict(list)
         for date in dates:
             indicators = cls.get_indicators(data_path, date)
@@ -144,6 +151,9 @@ class DataSet:
             for month in range(months):
                 data = pd.concat([indicators, labels.iloc[:, :month+1]], axis=1, join='inner')
                 x, y = data.iloc[:, :-1], data.iloc[:, -1]
+
+                if norm is not None:
+                    x.iloc[:, :] = normalize(x, norm = norm)
                 result[month+1].append((x, y))
 
         for k, v in result.items():
@@ -155,8 +165,8 @@ class DataSet:
 
     @classmethod
     def create(cls, args: Args):
-        train_data = cls.prepare_data(args.data_path, args.train_dates, args.predict_months)
-        test_data  = cls.prepare_data(args.data_path, args.test_dates, args.predict_months)
+        train_data = cls.prepare_data(args.data_path, args.train_dates, args.predict_months, args.norm)
+        test_data  = cls.prepare_data(args.data_path, args.test_dates, args.predict_months, args.norm)
 
         assert set(train_data.keys()) == set(test_data.keys())
 
