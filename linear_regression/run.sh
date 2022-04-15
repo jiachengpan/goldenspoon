@@ -28,18 +28,27 @@ debug_mode=T
 run_with_standardscaler=F
 ################################################################################
 #p0
+
+training_model=$1
+
 modelflag=voting_ada_gdbt_200 # change
-repeat_run=3
+[[ -z $repeat_run ]] && repeat_run=1
+[[ -z $training_model ]] && training_model=votingclassifier # votingclassifier # gbdtclassifier #adaboostclassifier # votingclassifier     # ['linear', 'ridge', 'lasso', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier']
+
 run_with_label_norm=T
 sample_number=1000
 data_flag=label_one_month_prior #[label_zero-new,label_zero-pre,label_zero-cur,label_one_month_prior]
 indicator_use_type=all_with_premonth_label #['all','all_with_premonth_label', 'industrial_static', 'industrial_dynamic', 'stock_dynamic', 'static_stock_dynamic','all_dynamic']
-training_model=votingclassifier # votingclassifier # gbdtclassifier #adaboostclassifier # votingclassifier     # ['linear', 'ridge', 'lasso', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier']
+
 label_type=class # ['regress','class']
 
 #p1
 data_path=regress_data_220408-${data_flag}/past_quarters_4/
-result_flag=regress_result_220408-${modelflag}-sample${sample_number}-${test_date_list}
+
+date=`date +%Y-%m-%d`
+#result_flag=regress_result_220408-${modelflag}-sample${sample_number}-${test_date_list}
+result_flag="result-${date}-sample${sample_number}-${test_date_list}"
+
 train_drop_ponit=0.0
 test_drop_ponit=0.0
 ################################################################################
@@ -51,9 +60,10 @@ fi
 
 
 if [ "${debug_mode}" = "T" ]; then
-    savepath=${result_flag}/test/${data_flag}/test_drop_ponit_${test_drop_ponit}/${training_model}/${flag}
+    #savepath=${result_flag}/test/${data_flag}/test_drop_ponit_${test_drop_ponit}/${training_model}/${flag}
+    savepath=${result_flag}/test/${data_flag}/test_drop_ponit_${test_drop_ponit}/${flag}
 else
-    savepath=${result_flag}/xy/${data_flag}/test_drop_ponit_${test_drop_ponit}/${training_model}/${flag}
+    savepath=${result_flag}/xy/${data_flag}/test_drop_ponit_${test_drop_ponit}/${flag}
 fi
 
 echo "--start"

@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
+import json
+import pickle
 
 import sklearn
 from sklearn import linear_model
 from sklearn import ensemble
 from sklearn import tree
-from sklearn.naive_bayes import GaussianNB 
+from sklearn.naive_bayes import GaussianNB
 import os
 import csv
 from data_preprocess import DataPreprocess
@@ -135,7 +137,8 @@ def get_args():
         "--training_model",
         default="linear",
         help="The model for training.",
-        choices=['linear', 'ridge', 'lasso', 'decisiontreeclassifier', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier','gbdtclassifier','votingclassifier'])
+        #choices=['linear', 'ridge', 'lasso', 'decisiontreeclassifier', 'randomforest', 'randomforestclssifier', 'adaboostregressor', 'adaboostclassifier','gbdtclassifier','votingclassifier'],
+        )
     parser.add_argument(
         "--label_type",
         default="class",
@@ -185,16 +188,19 @@ class Regress():
         1.label_type == 'class', 进行结果分析
         """
         global total_big_positive
+        print('DBG: label_type:', label_type)
         if label_type == 'class':
+            stats = {}
             if data_type == 'test':
                 pre_month_label = str(i_month_predict) + '_predict_changerate_price'
                 y_test_regress_value = y_test_regress_label[[pre_month_label]].values
                 stock_id = y_test_regress_label[['id']].values
-                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, 
-                                                y_test_regress_value, \
-                                                stock_id=stock_id, \
-                                                y_pred_prob=y_pred_prob, \
-                                                votingclassifier_y_pred_prob=self.votingclassifier_y_pred_prob)
+                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label,
+                                                y_test_regress_value,
+                                                stock_id=stock_id,
+                                                y_pred_prob=y_pred_prob,
+                                                votingclassifier_y_pred_prob=self.votingclassifier_y_pred_prob,
+                                                stats=stats)
 
                 # deprecated, 观察big_positive在不同月份连续出现的频率
                 df_big_positive.columns = ['id',pre_month_label]
@@ -206,7 +212,14 @@ class Regress():
                 pre_month_label = str(i_month_predict) + '_predict_changerate_price'
                 y_train_regress_value = y_train_regress_label[[pre_month_label]].values
                 stock_id = y_train_regress_label[['id']].values
-                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label, y_true_regress_value=None,stock_id=None)
+                df_big_positive = perf_measure(y_pred, y_test, cur_stock_price_test, self.i_month_label,
+                                               y_true_regress_value=None,
+                                               stock_id=None,
+                                               stats=stats)
+
+            with open(self.save_path_permonth + f'stats.{data_type}.pkl', 'wb') as f:
+                pickle.dump(stats, f)
+
             return
 
         """
@@ -335,7 +348,7 @@ class Regress():
                                 filled=True, rounded=True,
                                 special_characters=True)
         graph = pydotplus.graph_from_dot_data(dot_data)
-        graph.write_pdf(fig_path) 
+        graph.write_pdf(fig_path)
 
     def visual(self, training_model, model, features):
         fig_path = self.save_path_permonth + 'graphviz/'
@@ -396,7 +409,7 @@ class Regress():
             tempresult = group.sample(n=n)
             return tempresult
 
-        temp_sample = temp.groupby('_class_', group_keys=False).apply(typicalSampling, typicalNDict)  
+        temp_sample = temp.groupby('_class_', group_keys=False).apply(typicalSampling, typicalNDict)
 
         y_train_new = temp_sample['_class_']
         y_trainID_new = temp_sample['_id_']
@@ -506,6 +519,11 @@ class Regress():
                 # sub_classifier_predict_proba = self.model.named_estimators_[sub_classifier_name].predict_proba(x_test).max(axis=-1)
                 sub_classifier_predict_proba = self.model.named_estimators_[sub_classifier_name].predict_proba(x_test)
                 self.votingclassifier_y_pred_prob[sub_classifier_name] = sub_classifier_predict_proba
+        elif os.path.isfile(args.training_model):
+            self.votingclassifier_y_pred_prob = {}
+            # os.makedirs(self.save_path_permonth, exist_ok=True)
+            # with open(os.path.join(self.save_path_permonth, 'model.pkl'), 'wb') as f:
+            #     pickle.dump(self.model, f)
         else:
             assert("indicator_weight error!")
 
@@ -569,6 +587,8 @@ if __name__ == '__main__':
     label_norm = args.label_norm
     label_type = args.label_type
 
+    regress_model_params = {}
+
     """
         regress/class model
     """
@@ -619,7 +639,7 @@ if __name__ == '__main__':
         regress_model = ensemble.GradientBoostingClassifier(n_estimators=n_estimators, max_depth=10, min_samples_leaf=60, min_samples_split=60,learning_rate=learning_rate) ## debug
         label_type = 'class'
     elif args.training_model == 'votingclassifier':
-        
+
         # ADA-RandomForestClassifier
         G_LOGGER.info(" ================================ ")
         G_LOGGER.info(" == ADA RandomForestClassifier == ")
@@ -692,7 +712,11 @@ if __name__ == '__main__':
         #     ("gbdt", gbdt),
         # ],voting="soft")
         label_type = 'class'
-        
+    elif os.path.isfile(args.training_model):
+        import pickle
+        data = pickle.load(open(args.training_model, "rb"))
+        regress_model        = data['model']
+        regress_model_params = data['params']
     else:
         assert("The training model was not implemented.")
 
@@ -756,6 +780,9 @@ if __name__ == '__main__':
             save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
             if not os.path.exists(save_path_permonth):
                 os.makedirs(save_path_permonth)
+
+            with open(save_path_permonth + 'model_params.json', 'w') as f:
+                json.dump(regress_model_params, f)
 
             r = Regress(regress_model, save_path_permonth,
                         i_month_label, indicator_list,
