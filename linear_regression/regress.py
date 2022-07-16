@@ -772,6 +772,19 @@ if __name__ == '__main__':
         global total_big_positive
         total_big_positive = pd.DataFrame()
 
+        all_exists = True
+        for i in range(n_month_predict):
+            i_month_predict = i + 1
+            save_path_permonth = save_path + '/' + str(i_month_predict) + '_month/'
+            if os.path.exists(os.path.join(save_path_permonth, 'indicator_weight.log')):
+                print('file exists:', os.path.join(save_path_permonth, 'indicator_weight.log'))
+                continue
+            all_exists = False
+            break
+
+        if all_exists:
+            continue
+
         for i in range(n_month_predict):
             i_month_predict = i + 1
             i_month_label = str(i_month_predict) + '_' + predict_mode

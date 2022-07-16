@@ -22,6 +22,35 @@ train_date_len=6
 train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30"
 test_date_list="2021-12-31"
 
+if [[ $test_suite = "2021-09-30" ]]; then
+  train_date_len=4
+  train_date_list="2020-09-30 2020-12-31 2021-03-31 2021-06-30"
+  test_date_list="2021-09-30"
+fi
+
+if [[ $test_suite = "2021-06-30" ]]; then
+  train_date_len=4
+  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31"
+  test_date_list="2021-06-30"
+fi
+
+if [[ $test_suite = "2021-12-31" ]]; then
+  train_date_len=6
+  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30"
+  test_date_list="2021-12-31"
+fi
+
+if [[ $test_suite = "2022-03-31" ]]; then
+  train_date_len=7
+  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30 2021-12-31"
+  test_date_list="2022-03-31"
+fi
+
+if [[ $test_suite = "2022-06-30" ]]; then
+  train_date_len=8
+  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30 2021-12-31 2022-03-31"
+  test_date_list="2022-06-30"
+fi
 
 ################################################################################
 debug_mode=T
@@ -43,11 +72,13 @@ indicator_use_type=all_with_premonth_label #['all','all_with_premonth_label', 'i
 label_type=class # ['regress','class']
 
 #p1
-data_path=regress_data_220408-${data_flag}/past_quarters_4/
+#data_path=regress_data_220408-${data_flag}/past_quarters_4/
+data_path=regress_data_220605-${data_flag}/past_quarters_4/
 
 date=`date +%Y-%m-%d`
 #result_flag=regress_result_220408-${modelflag}-sample${sample_number}-${test_date_list}
-result_flag="result-${date}-sample${sample_number}-${test_date_list}"
+#result_flag="result-${date}-sample${sample_number}-${test_date_list}"
+result_flag="result-top2-sample${sample_number}-${test_date_list}"
 
 train_drop_ponit=0.0
 test_drop_ponit=0.0
@@ -67,10 +98,9 @@ else
 fi
 
 echo "--start"
-echo "flag:"
-echo ${flag}
-echo "savepath:"
-echo ${savepath}
+# echo "flag:"
+# echo ${flag}
+echo "savepath: $savepath"
 
 if [ "${run_with_standardscaler}" = "T" ]; then
   savepath=${savepath}/data_standardscaler/
@@ -87,8 +117,6 @@ else
   savepath=${savepath}/label_original/
   label_norm=''
 fi
-
-
 
 if [ ! -d "${savepath}" ]; then
   mkdir -p ${savepath}
