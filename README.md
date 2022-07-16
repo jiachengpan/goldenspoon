@@ -77,3 +77,12 @@
         default=0.15,
         help="drop ponit for task 'drop_small_change_stock_fortest'.")
 ```
+
+### Prediction With Selected Models
+
+1. cd ./linear_regression
+2. update `run_all.py` and `summarize_all.sh` for updated parameters (e.g. date and model names)
+3. run training and predictions with: `python3 run_all.py`
+4. run data summarize with `bash summarize_all.sh`
+
+Resultant summary will be present in `summary.voting.${date}.xlsx` files.
