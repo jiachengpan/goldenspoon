@@ -28,7 +28,7 @@ dates="
 mkdir -p $output_dir
 mkdir -p logs
 
-dateflag=220730
+dateflag=221031
 run_label_for_priormonth=T
 if [ "${run_label_for_priormonth}" = "T" ]; then
   output_dir=${output_dir}/regress_data_${dateflag}-label_one_month_prior/past_quarters_${past_quarters}/
