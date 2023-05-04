@@ -16,6 +16,7 @@ dates="
        2022-06-30
        2022-09-30
        2022-12-31
+       2023-03-31
        "
 
 # dates="
@@ -29,7 +30,7 @@ dates="
 mkdir -p $output_dir
 mkdir -p logs
 
-dateflag=230131
+dateflag=230504
 run_label_for_priormonth=T
 if [ "${run_label_for_priormonth}" = "T" ]; then
   output_dir=${output_dir}/regress_data_${dateflag}-label_one_month_prior/past_quarters_${past_quarters}/
