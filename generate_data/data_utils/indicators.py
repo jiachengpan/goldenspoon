@@ -39,7 +39,7 @@ class stocks_dynamic_indicators():
         self.ind_stocks_general = ind_stocks_general
         self.ind_stocks_perf = ind_stocks_perf
         self.ind_stocks_perf_with_fund = ind_stocks_perf_with_fund
-    
+
     def joyan_test (self, perf_metric, df_func):
         stock_id_list = []
         full_report_momentum_list= []
@@ -72,7 +72,7 @@ class stocks_dynamic_indicators():
                         elif (sample_quarter.month == 3) or (sample_quarter.month == 9):
                             #print ('find a partial quarter')
                             sample = ind_stocks_perf_temp.iloc[i][perf_metric]
-                            partial_report_list.append(sample)                          
+                            partial_report_list.append(sample)
                     #print (full_report_list)
                     #print (partial_report_list)
                     if len(full_report_list)>=2:
@@ -81,8 +81,8 @@ class stocks_dynamic_indicators():
                     if len(partial_report_list)>=2:
                         partial_report_momentum = (partial_report_list[-1]-partial_report_list[-2])/partial_report_list[-2]
                     else: partial_report_momentum = np.nan
-                    #print ('full_report_momentum',full_report_momentum)
-                    #print ('partial_report_momentum',partial_report_momentum)
+                    # print ('full_report_momentum',full_report_momentum, len(full_report_list))
+                    # print ('partial_report_momentum',partial_report_momentum, len(partial_report_list))
                 else:
                     full_report_momentum = np.nan
                     partial_report_momentum = np.nan
@@ -313,16 +313,13 @@ class stocks_industry_dynamic_indicators():
                 ind_stocks_perf_temp = (
                     df_func.loc[df_func['股票代码'] == stock_id])
                 ind_stocks_quater_count = ind_stocks_perf_temp.shape[0]
- 
-
-
 
                 full_report_list = []
                 partial_report_list = []
                 if ind_stocks_quater_count >=4:
                     for i in range (ind_stocks_quater_count):
                         sample_quarter = ind_stocks_perf_temp.iloc[i]['日期']
-                        #print ('sample quarter,', sample_quarter, sample_quarter.month)
+                        # print ('sample quarter,', sample_quarter, sample_quarter.month)
                         if (sample_quarter.month == 6) or (sample_quarter.month == 12):
                             #print ('find a full quarter')
                             sample = ind_stocks_perf_temp.iloc[i][perf_metric]
@@ -330,7 +327,7 @@ class stocks_industry_dynamic_indicators():
                         elif (sample_quarter.month == 3) or (sample_quarter.month == 9):
                             #print ('find a partial quarter')
                             sample = ind_stocks_perf_temp.iloc[i][perf_metric]
-                            partial_report_list.append(sample)                          
+                            partial_report_list.append(sample)
                     #print (full_report_list)
                     #print (partial_report_list)
                     if len(full_report_list)>=2:
@@ -339,13 +336,17 @@ class stocks_industry_dynamic_indicators():
                     if len(partial_report_list)>=2:
                         partial_report_momentum = (partial_report_list[-1]-partial_report_list[-2])/partial_report_list[-2]
                     else: partial_report_momentum = np.nan
-                    #print ('full_report_momentum',full_report_momentum)
-                    #print ('partial_report_momentum',partial_report_momentum)
+                    # print ('full_report_momentum',full_report_momentum, len(full_report_list))
+                    # print ('partial_report_momentum',partial_report_momentum, len(partial_report_list))
                 else:
                     full_report_momentum = np.nan
                     partial_report_momentum = np.nan
 
-                if (not np.isnan(full_report_momentum) and (not np.isnan(partial_report_momentum))):
+                if (not np.isnan(full_report_momentum) and
+                    not np.isinf(full_report_momentum) and
+                    not np.isnan(partial_report_momentum) and
+                    not np.isinf(partial_report_momentum)):
+
                     change_full_list.append(full_report_momentum)
                     change_partial_list.append(partial_report_momentum)
 
@@ -460,7 +461,6 @@ def get_stocks_industry_dynamic_indicators(ind_stocks_general, ind_stocks_perf, 
     fund_number_id_list, fund_number_full, fund_number_partial = stocks_industry_dynamic.joyan_test(
         '持股基金家数 [股本类型]流通股本', ind_stocks_perf_holding_funds_share)
 
-
     assert len(avg_price_stock_id_list) == len(
         fund_shareholding_id_list) == len(fund_number_id_list)
 
@@ -569,7 +569,6 @@ def compute_indicators(ind, end_date, past_quater_number_):
     ind_stocks_general = ind.get_stock_general()
     ind_stocks_perf = ind.get_stock_performance()
     ind_stocks_holding_funds_share = ind.get_stock_holding_funds_share()
-    
 
     #ind_stocks_holding_funds_number = ind.get_stock_holding_funds_number()
     #ind_stocks_holding_topn_funds = ind.get_stock_topn_holding_funds()

@@ -119,6 +119,15 @@ class Indicator:
                    self.k_stock_column_margin_diff,
                    ]
         stocks_timed = self.get_stocks_timed()[columns]
+        stocks_timed['__year'] = pd.DatetimeIndex(stocks_timed['日期']).year
+        stocks_timed['__month'] = pd.DatetimeIndex(stocks_timed['日期']).month
+
+        stocks_timed = (stocks_timed
+                .sort_values(self.k_column_date)
+                .groupby([self.k_stock_column_code, '__year', '__month'])
+                .last()
+                .reset_index())[columns]
+
         return self.add_stock_name(stocks_timed).dropna()
 
     def get_stock_holding_funds_share(self):
