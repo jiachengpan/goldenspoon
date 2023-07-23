@@ -14,8 +14,6 @@ from data_preprocess import DataPreprocess
 import argparse
 from result_analysis import drop_small_change_stock_fntrain, drop_small_change_stock_fntest, perf_measure, perf_measure_per_stock, draw_confusion_matrix
 from pandas.testing import assert_frame_equal
-import pybaobabdt
-import pydotplus
 import heapq
 from utils.logger import G_LOGGER
 
@@ -338,10 +336,12 @@ class Regress():
 
     def graphviz(self, clf, features, class_names, model=[],  fig_path='claasifier_tree.png'):
         clf.classes_ = class_names
+        import pybaobabdt
         ax = pybaobabdt.drawTree(clf, model=model, size=10, dpi=72, features=list(features), colormap='Spectral',classes=class_names)
         ax.get_figure().savefig(fig_path, format='png', dpi=300, transparent=True)
 
     def graphviz_detail(self, clf, features,class_names, fig_path='claasifier_tree.pdf', ):
+        import pydotplus
         dot_data = tree.export_graphviz(clf, out_file=None,
                                 feature_names=features,
                                 class_names=class_names,

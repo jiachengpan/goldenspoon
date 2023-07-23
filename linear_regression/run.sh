@@ -46,10 +46,10 @@ if [[ $test_suite = "2022-03-31" ]]; then
   test_date_list="2022-03-31"
 fi
 
-if [[ $test_suite = "2022-06-30" ]]; then
-  train_date_len=8
-  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30 2021-12-31 2022-03-31"
-  test_date_list="2022-06-30"
+if [[ $test_suite = "2023-03-31" ]]; then
+  train_date_len=11
+  train_date_list="2020-06-30 2020-09-30 2020-12-31 2021-03-31 2021-06-30 2021-09-30 2021-12-31 2022-03-31 2022-06-30 2022-09-30 2022-12-31"
+  test_date_list="2023-03-31"
 fi
 
 ################################################################################
@@ -73,7 +73,7 @@ label_type=class # ['regress','class']
 
 #p1
 #data_path=regress_data_220408-${data_flag}/past_quarters_4/
-data_path=regress_data_220605-${data_flag}/past_quarters_4/
+data_path=regress_data_230504-${data_flag}/past_quarters_4/
 
 date=`date +%Y-%m-%d`
 #result_flag=regress_result_220408-${modelflag}-sample${sample_number}-${test_date_list}
